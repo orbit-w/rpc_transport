@@ -14,7 +14,7 @@ import (
 /*
 codec:
 
-	编码格式：- pid int64 - | - seq uint32 - | - category int8 - | - data []byte -
+  - pid int64 - | - seq uint32 - | - category int8 - | - data []byte -
 */
 func (c *Client) encode(pid int64, seq uint32, category int8, out []byte) packet.IPacket {
 	writer := packet.Writer()
@@ -28,28 +28,21 @@ func (c *Client) encode(pid int64, seq uint32, category int8, out []byte) packet
 	return pack
 }
 
-type message struct {
-	category int8
-	seq      uint32
-	pid      int64
-	reply    []byte
-}
-
 func (c *Client) decode(in packet.IPacket) (msg message, err error) {
 	defer in.Return()
 	msg.pid, err = in.ReadInt64()
 	if err != nil {
-		log.Fatalln("decode pid failed: ", err.Error())
+		log.Println("decode pid failed: ", err.Error())
 		return
 	}
 	msg.seq, err = in.ReadUint32()
 	if err != nil {
-		log.Fatalln("decode seq failed: ", err.Error())
+		log.Println("decode seq failed: ", err.Error())
 		return
 	}
 	msg.category, err = in.ReadInt8()
 	if err != nil {
-		log.Fatalln("decode category failed: ", err.Error())
+		log.Println("decode category failed: ", err.Error())
 		return
 	}
 

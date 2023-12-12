@@ -24,7 +24,13 @@ var (
 )
 
 func getRequest() *Request {
-	return reqPool.Get().(*Request)
+	v := reqPool.Get()
+	if v == nil {
+		return &Request{
+			ch: make(chan IResponse, 1),
+		}
+	}
+	return v.(*Request)
 }
 
 func getResponse() *Response {

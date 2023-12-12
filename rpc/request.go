@@ -10,25 +10,24 @@ type IRequest interface {
 	Id() uint32
 	Return()
 	Response(in []byte, err error)
-	IsInvoker() bool
+	IsAsyncInvoker() bool
 	Invoke(in []byte, err error) error
 	Done() <-chan IResponse
 }
 
 type Request struct {
 	seq     uint32
-	invoker IInvoker
+	invoker IAsyncInvoker
 	ch      chan IResponse
 }
 
 func NewRequest(seq uint32) IRequest {
 	r := getRequest()
 	r.seq = seq
-	r.ch = make(chan IResponse, 1)
 	return r
 }
 
-func NewRequestWithInvoker(seq uint32, _invoker IInvoker) IRequest {
+func NewRequestWithInvoker(seq uint32, _invoker IAsyncInvoker) IRequest {
 	r := getRequest()
 	r.seq = seq
 	r.invoker = _invoker
@@ -53,7 +52,7 @@ func (r *Request) Invoke(in []byte, err error) error {
 	return r.invoker.Invoke(in, err)
 }
 
-func (r *Request) IsInvoker() bool {
+func (r *Request) IsAsyncInvoker() bool {
 	return r.invoker == nil
 }
 
@@ -82,7 +81,7 @@ type Response struct {
 }
 
 func (r *Response) In() ([]byte, error) {
-	return r.in, r.err
+	return r.in, NewRpcError(r.err)
 }
 
 func (r *Response) Return() {

@@ -1,7 +1,9 @@
 package rpc
 
 import (
-	"github.com/orbit-w/golib/bases/container/heap_list"
+	"errors"
+	"github.com/orbit-w/orbit-net/core/unbounded"
+	"log"
 	"sync"
 	"time"
 )
@@ -12,60 +14,58 @@ import (
    @2023 12月 周六 12:16
 */
 
+const (
+	BucketNum = 32
+)
+
 type Pending struct {
-	mu       sync.Mutex
-	timeout  time.Duration
-	hmu      sync.Mutex
-	m        map[uint32]IRequest
-	heapList *heap_list.HeapList[uint32, int8, int64]
+	timeout time.Duration
+	m       [BucketNum]sync.Map
+	cli     *Client
+	to      *Timeout[uint32]
 }
 
 func (p *Pending) Init(_timeout time.Duration) {
-	p.mu = sync.Mutex{}
 	p.timeout = _timeout
-	p.m = make(map[uint32]IRequest)
-	p.heapList = heap_list.New[uint32, int8, int64]()
+	p.to = NewTimeoutMgr[uint32](_timeout, func(ids []uint32) {
+		err := p.cli.input(timeoutListMsg{
+			ids: ids,
+		})
+		if !errors.Is(err, unbounded.ErrCancel) {
+			log.Println("handle send timeoutListMsg failed: ", err.Error())
+		}
+	})
 }
 
 func (p *Pending) Push(req IRequest) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.m[req.Id()] = req
-	if req.IsInvoker() {
-		p.heapList.Push(req.Id(), 0, time.Now().Add(p.timeout).Unix())
+	id := req.Id()
+	p.m[id%BucketNum].Store(id, req)
+	if req.IsAsyncInvoker() {
+		p.to.Push(req.Id())
 	}
 	return
 }
 
 func (p *Pending) Pop(id uint32) (IRequest, bool) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	req, ok := p.m[id]
-	if ok {
-		delete(p.m, id)
-		if req.IsInvoker() {
-			p.heapList.Delete(id)
+	v, exist := p.m[id%BucketNum].LoadAndDelete(id)
+	if exist {
+		req := v.(IRequest)
+		if req.IsAsyncInvoker() {
+			p.to.Pop(id)
 		}
 	}
 	return nil, false
 }
 
-func (p *Pending) RangeTimeout(iter func(req IRequest)) {
-	now := time.Now().Unix()
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	ids := make([]uint32, 0, 1<<3)
-	p.heapList.PopByScore(now, func(k uint32, _ int8) bool {
-		ids = append(ids, k)
-		return true
-	})
+func (p *Pending) OnClose() {
+	p.to.OnClose()
+}
 
-	for i := range ids {
-		id := ids[i]
-		req, ok := p.m[id]
-		if ok {
-			delete(p.m, id)
-			iter(req)
-		}
+func (p *Pending) RangeAll(iter func(id uint32)) {
+	for i := range p.m {
+		p.m[i].Range(func(key, value any) bool {
+			iter(key.(uint32))
+			return true
+		})
 	}
 }
