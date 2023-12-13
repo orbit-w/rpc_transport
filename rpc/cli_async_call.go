@@ -1,5 +1,10 @@
 package rpc
 
+import (
+	"github.com/orbit-w/mmrpc/rpc/callb"
+	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
+)
+
 var (
 	invokeCB func(ctx any, in []byte, err error) error
 )
@@ -11,12 +16,12 @@ func SetInvokeCB(cb func(ctx any, in []byte, err error) error) {
 
 func (c *Client) AsyncCall(pid int64, out []byte, ctx any) error {
 	if c.state.Load() == TypeStopped {
-		return ErrDisconnect
+		return mmrpcs.ErrDisconnect
 	}
 	seq := c.seq.Add(1)
-	req := NewRequestWithInvoker(seq, NewAsyncInvoker(ctx, nil))
+	req := callb.NewCallWithInvoker(seq, NewAsyncInvoker(ctx, nil))
 	c.pending.Push(req)
-	pack := c.encode(pid, seq, RpcAsyncCall, out)
+	pack := c.codec.encode(pid, seq, RpcAsyncCall, out)
 	if err := c.stream.Send(pack); err != nil {
 		c.pending.Pop(seq)
 		req.Return()
@@ -27,12 +32,12 @@ func (c *Client) AsyncCall(pid int64, out []byte, ctx any) error {
 
 func (c *Client) AsyncCallC(pid int64, out []byte, ctx any, cb func(ctx any, in []byte, err error) error) error {
 	if c.state.Load() == TypeStopped {
-		return ErrDisconnect
+		return mmrpcs.ErrDisconnect
 	}
 	seq := c.seq.Add(1)
-	req := NewRequestWithInvoker(seq, NewAsyncInvoker(ctx, cb))
+	req := callb.NewCallWithInvoker(seq, NewAsyncInvoker(ctx, cb))
 	c.pending.Push(req)
-	pack := c.encode(pid, seq, RpcAsyncCall, out)
+	pack := c.codec.encode(pid, seq, RpcAsyncCall, out)
 	if err := c.stream.Send(pack); err != nil {
 		c.pending.Pop(seq)
 		req.Return()

@@ -3,46 +3,48 @@ package rpc
 import (
 	"context"
 	"errors"
+	"github.com/orbit-w/mmrpc/rpc/callb"
+	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 )
 
 func (c *Client) Call(ctx context.Context, pid int64, out []byte) ([]byte, error) {
 	if c.state.Load() == TypeStopped {
-		return nil, ErrDisconnect
+		return nil, mmrpcs.ErrDisconnect
 	}
 	seq := c.seq.Add(1)
-	req := NewRequest(seq)
+	call := callb.NewCall(seq)
 
-	c.pending.Push(req)
-	pack := c.encode(pid, seq, RpcCall, out)
+	c.pending.Push(call)
+	pack := c.codec.encode(pid, seq, RpcCall, out)
 	if err := c.stream.Send(pack); err != nil {
 		c.pending.Pop(seq)
-		req.Return()
+		call.Return()
 		return nil, err
 	}
 
 	select {
-	case rsp := <-req.Done():
-		reply, err := rsp.In()
-		req.Return()
-		rsp.Return()
+	case reply := <-call.Done():
+		data, err := reply.In()
+		call.Return()
+		reply.Return()
 		switch {
-		case IsCancelError(err):
-			return reply, ErrCanceled
+		case mmrpcs.IsCancelError(err):
+			return data, mmrpcs.ErrCanceled
 		default:
-			return reply, NewRpcError(err)
+			return data, mmrpcs.NewRpcError(err)
 		}
 	case <-ctx.Done():
 		if _, exist := c.pending.Pop(seq); exist {
-			req.Return()
+			call.Return()
 		}
 		err := ctx.Err()
 		switch {
 		case errors.Is(err, context.DeadlineExceeded):
-			return nil, ErrDeadlineExceeded
+			return nil, mmrpcs.ErrDeadlineExceeded
 		case errors.Is(err, context.Canceled):
-			return nil, ErrCanceled
+			return nil, mmrpcs.ErrCanceled
 		default:
-			return nil, NewRpcError(err)
+			return nil, mmrpcs.NewRpcError(err)
 		}
 	}
 }

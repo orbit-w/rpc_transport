@@ -17,11 +17,11 @@ const (
 )
 
 type (
-	message struct {
+	replyMsg struct {
 		category int8
 		seq      uint32
 		pid      int64
-		reply    []byte
+		buf      []byte
 	}
 
 	timeoutListMsg struct {

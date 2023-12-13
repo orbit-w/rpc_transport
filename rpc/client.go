@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/orbit-w/golib/bases/packet"
+	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 	"github.com/orbit-w/orbit-net/core/stream_transport"
 	"github.com/orbit-w/orbit-net/core/stream_transport/metadata"
 	"github.com/orbit-w/orbit-net/core/unbounded"
@@ -29,7 +30,7 @@ import (
 // will return and receive the error 'rpc err: disconnect'
 type IClient interface {
 	// Call performs a unary RPC and returns after the response is received
-	// into reply.
+	// into replyMsg.
 	// Support users to use context to cancel blocking status or perform timeout operations
 	Call(ctx context.Context, pid int64, out []byte) ([]byte, error)
 
@@ -37,7 +38,7 @@ type IClient interface {
 	// The callback is handled by a separate goroutine.
 	// The caller needs to consider thread safety issues.
 
-	// AsyncCall the safe way to handle asynchronous callbacks is to package the context, reply, and err
+	// AsyncCall the safe way to handle asynchronous callbacks is to package the context, replyMsg, and err
 	// into a message task and send it to the working goroutine to process the message linearly
 	AsyncCall(pid int64, out []byte, ctx any) error
 
@@ -66,6 +67,7 @@ type Client struct {
 	timeout    time.Duration
 	stream     stream_transport.IStreamClient
 	conn       stream_transport.IClientConn
+	codec      Codec
 	pending    *Pending
 	ch         unbounded.IUnbounded[any]
 }
@@ -90,7 +92,7 @@ func NewClient(id, remoteId, remoteAddr string) (IClient, error) {
 		return nil, err
 	}
 	cli.stream = stream
-	cli.pending.Init(cli.timeout)
+	cli.pending.Init(cli, cli.timeout)
 	if !cli.state.CompareAndSwap(TypeNone, TypeRunning) {
 		_ = cli.stream.CloseSend()
 		_ = cli.conn.Close()
@@ -119,7 +121,7 @@ func (c *Client) reader() {
 	)
 
 	defer func() {
-		if !IsCancelError(err) {
+		if !mmrpcs.IsCancelError(err) {
 			log.Println("read failed: ", err.Error())
 		}
 		if c.state.CompareAndSwap(TypeRunning, TypeStopped) {
@@ -139,8 +141,10 @@ func (c *Client) reader() {
 			return
 		}
 
-		msg, _ := c.decode(in)
-		if err = c.ch.Send(msg); !errors.Is(err, unbounded.ErrCancel) {
+		decoder := NewDecoder(in)
+		_ = decoder.Decode()
+
+		if err = c.ch.Send(decoder); !errors.Is(err, unbounded.ErrCancel) {
 			log.Println("reader send in failed: ", err.Error())
 		}
 	}
@@ -154,14 +158,14 @@ func (c *Client) input(v any) error {
 func (c *Client) loopInput() {
 	defer func() {
 		c.pending.RangeAll(func(id uint32) {
-			req, ok := c.pending.Pop(id)
+			call, ok := c.pending.Pop(id)
 			if ok {
 				switch {
-				case req.IsAsyncInvoker():
-					_ = req.Invoke([]byte{}, ErrDisconnect)
-					req.Return()
+				case call.IsAsyncInvoker():
+					_ = call.Invoke([]byte{}, mmrpcs.ErrDisconnect)
+					call.Return()
 				default:
-					req.Response([]byte{}, ErrDisconnect)
+					call.Reply([]byte{}, mmrpcs.ErrDisconnect)
 				}
 			}
 		})
@@ -182,24 +186,25 @@ func (c *Client) handleMessage(in any) {
 		}
 	}()
 
-	switch msg := in.(type) {
-	case message:
-		req, ok := c.pending.Pop(msg.seq)
+	switch reply := in.(type) {
+	case Decoder:
+		call, ok := c.pending.Pop(reply.seq)
 		if ok {
 			switch {
-			case req.IsAsyncInvoker():
-				_ = req.Invoke(msg.reply, nil)
-				req.Return()
+			case call.IsAsyncInvoker():
+				_ = call.Invoke(reply.buf, nil)
+				call.Return()
 			default:
-				req.Response(msg.reply, nil)
+				call.Reply(reply.buf, nil)
 			}
 		}
+		reply.Return()
 	case timeoutListMsg:
-		for i := range msg.ids {
-			id := msg.ids[i]
+		for i := range reply.ids {
+			id := reply.ids[i]
 			req, ok := c.pending.Pop(id)
 			if ok && req.IsAsyncInvoker() {
-				_ = req.Invoke([]byte{}, ErrTimeout)
+				_ = req.Invoke([]byte{}, mmrpcs.ErrTimeout)
 				req.Return()
 			}
 		}
