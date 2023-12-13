@@ -1,5 +1,11 @@
 package rpc
 
+import (
+	"bytes"
+	"github.com/orbit-w/golib/bases/packet"
+	"io"
+)
+
 /*
    @Author: orbit-w
    @File: request
@@ -7,85 +13,62 @@ package rpc
 */
 
 type IRequest interface {
-	Id() uint32
+	Pid() int64
+	NewReader() io.Reader
+
+	Response(out []byte) error
+
+	// Return To prevent request resource memory leaks,
+	// you need to explicitly call the Return method to release it.
+	// cannot call Response again later
 	Return()
-	Response(in []byte, err error)
-	IsAsyncInvoker() bool
-	Invoke(in []byte, err error) error
-	Done() <-chan IResponse
 }
 
 type Request struct {
-	seq     uint32
-	invoker IAsyncInvoker
-	ch      chan IResponse
+	isResponse bool
+	Category   int8 //请求类型： RpcRaw｜RpcCall｜RpcAsyncCall
+	seq        uint32
+	pid        int64
+	buf        []byte
+	session    ISession
 }
 
-func NewRequest(seq uint32) IRequest {
-	r := getRequest()
-	r.seq = seq
-	return r
-}
-
-func NewRequestWithInvoker(seq uint32, _invoker IAsyncInvoker) IRequest {
-	r := getRequest()
-	r.seq = seq
-	r.invoker = _invoker
-	return r
-}
-
-func (r *Request) Id() uint32 {
-	return r.seq
-}
-
-func (r *Request) Response(in []byte, err error) {
-	rsp := getResponse()
-	rsp.in = in
-	rsp.err = err
-	select {
-	case r.ch <- rsp:
-	default:
+func NewRequest(session ISession, in packet.IPacket) (IRequest, error) {
+	d := NewDecoder(in)
+	if err := d.Decode(); err != nil {
+		return nil, err
 	}
+	req := reqPool.Get().(*Request)
+	req.pid = d.pid
+	req.seq = d.seq
+	req.Category = d.category
+	req.buf = d.buf
+	req.session = session
+	return req, nil
 }
 
-func (r *Request) Invoke(in []byte, err error) error {
-	return r.invoker.Invoke(in, err)
+func (r *Request) NewReader() io.Reader {
+	return bytes.NewReader(r.buf)
 }
 
-func (r *Request) IsAsyncInvoker() bool {
-	return r.invoker == nil
+func (r *Request) Pid() int64 {
+	return r.pid
 }
 
-func (r *Request) Done() <-chan IResponse {
-	return r.ch
+func (r *Request) Response(out []byte) error {
+	if r.isResponse {
+		return nil
+	}
+	r.isResponse = true
+	return r.session.Send(r.pid, r.seq, r.Category, out)
 }
 
 func (r *Request) Return() {
-	r.reset()
-	reqPool.Put(r)
-}
-
-func (r *Request) reset() {
-	r.invoker = nil
+	r.session = nil
+	r.buf = nil
 	r.seq = 0
-}
-
-type IResponse interface {
-	In() ([]byte, error)
-	Return()
-}
-
-type Response struct {
-	in  []byte
-	err error
-}
-
-func (r *Response) In() ([]byte, error) {
-	return r.in, NewRpcError(r.err)
-}
-
-func (r *Response) Return() {
-	r.in = nil
-	r.err = nil
-	rspPool.Put(r)
+	r.pid = 0
+	r.Category = 0
+	r.isResponse = false
+	reqPool.Put(r)
 }
