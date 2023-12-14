@@ -75,6 +75,7 @@ func (t *Timeout[T]) check() {
 		return true
 	})
 	t.mu.Unlock()
-
-	t.callback(ids)
+	if num > 0 {
+		t.callback(ids)
+	}
 }

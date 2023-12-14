@@ -12,7 +12,7 @@ import (
 
 var (
 	decodersPool = sync.Pool{New: func() any {
-		return Decoder{}
+		return new(Decoder)
 	}}
 
 	reqPool = sync.Pool{New: func() any {

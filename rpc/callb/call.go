@@ -53,7 +53,7 @@ func (r *Call) Invoke(in []byte, err error) error {
 }
 
 func (r *Call) IsAsyncInvoker() bool {
-	return r.invoker == nil
+	return r.invoker != nil
 }
 
 func (r *Call) Done() <-chan IReply {

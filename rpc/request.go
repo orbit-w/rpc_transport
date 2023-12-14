@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/orbit-w/golib/bases/packet"
 	"io"
+	"log"
 )
 
 /*
@@ -34,8 +35,12 @@ type Request struct {
 }
 
 func NewRequest(session ISession, in packet.IPacket) (IRequest, error) {
-	d := NewDecoder(in)
-	if err := d.Decode(); err != nil {
+	if in == nil {
+		log.Println("wo cao")
+	}
+	d := NewDecoder()
+	defer d.Return()
+	if err := d.Decode(in); err != nil {
 		return nil, err
 	}
 	req := reqPool.Get().(*Request)

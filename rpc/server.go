@@ -1,10 +1,8 @@
 package rpc
 
 import (
-	"fmt"
 	"github.com/orbit-w/orbit-net/core/stream_transport"
 	"github.com/orbit-w/orbit-net/core/stream_transport/metadata"
-	"io"
 	"log"
 	"net"
 )
@@ -39,13 +37,6 @@ var gRequestHandle RequestHandle
 
 func setTestHandle() {
 	gRequestHandle = func(req IRequest) error {
-		reader := req.NewReader()
-		bytes, _ := io.ReadAll(reader)
-		switch bytes[0] {
-		case 1:
-			fmt.Println("Request received... ")
-		case 2:
-		}
 		_ = req.Response([]byte{1})
 		return nil
 	}

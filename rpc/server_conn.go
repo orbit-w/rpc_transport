@@ -1,8 +1,10 @@
 package rpc
 
 import (
+	"errors"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 	"github.com/orbit-w/orbit-net/core/stream_transport"
+	"io"
 	"log"
 	"runtime/debug"
 )
@@ -35,14 +37,22 @@ func (c *Conn) reader() {
 	for {
 		in, err := c.stream.Recv()
 		if err != nil {
-			if mmrpcs.IsCancelError(err) {
-				break
+			switch {
+			case mmrpcs.IsCancelError(err):
+			case errors.Is(err, io.EOF):
+			default:
+				log.Println("conn read stream failed: ", err.Error())
 			}
-			log.Println("conn read stream failed: ", err.Error())
-			break
+			return
 		}
-
+		if in == nil {
+			log.Println("wo cao")
+		}
 		req, err := NewRequest(c, in)
+		if err != nil {
+			log.Println("[ServerConn] [reader] new request failed: ", err.Error())
+			continue
+		}
 		c.handleRequest(req)
 	}
 }
@@ -50,7 +60,8 @@ func (c *Conn) reader() {
 func (c *Conn) handleRequest(req IRequest) {
 	defer func() {
 		if r := recover(); r != nil {
-			debug.PrintStack()
+			log.Println(r)
+			log.Println("stack: ", string(debug.Stack()))
 		}
 	}()
 	//TODO：need to handle user-level errors?

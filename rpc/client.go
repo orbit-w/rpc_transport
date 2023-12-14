@@ -3,11 +3,12 @@ package rpc
 import (
 	"context"
 	"errors"
+	"github.com/alphadose/zenq/v2"
 	"github.com/orbit-w/golib/bases/packet"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 	"github.com/orbit-w/orbit-net/core/stream_transport"
 	"github.com/orbit-w/orbit-net/core/stream_transport/metadata"
-	"github.com/orbit-w/orbit-net/core/unbounded"
+	"io"
 	"log"
 	"runtime/debug"
 	"sync/atomic"
@@ -69,7 +70,7 @@ type Client struct {
 	conn       stream_transport.IClientConn
 	codec      Codec
 	pending    *Pending
-	ch         unbounded.IUnbounded[any]
+	zq         *zenq.ZenQ[any]
 }
 
 func NewClient(id, remoteId, remoteAddr string) (IClient, error) {
@@ -79,7 +80,7 @@ func NewClient(id, remoteId, remoteAddr string) (IClient, error) {
 		remoteId:   remoteId,
 		timeout:    RpcTimeout,
 		pending:    new(Pending),
-		ch:         unbounded.New[any](1024),
+		zq:         zenq.New[any](2048),
 	}
 
 	cli.conn = stream_transport.DialWithOps(remoteAddr, id)
@@ -108,6 +109,7 @@ func (c *Client) Close() {
 		if c.stream != nil {
 			_ = c.stream.CloseSend()
 		}
+		time.Sleep(time.Second)
 		if c.conn != nil {
 			_ = c.conn.Close()
 		}
@@ -121,17 +123,23 @@ func (c *Client) reader() {
 	)
 
 	defer func() {
-		if !mmrpcs.IsCancelError(err) {
-			log.Println("read failed: ", err.Error())
+		if err != nil {
+			switch {
+			case mmrpcs.IsCancelError(err):
+			case errors.Is(err, io.EOF):
+			default:
+				log.Println("read failed: ", err.Error())
+			}
 		}
+
 		if c.state.CompareAndSwap(TypeRunning, TypeStopped) {
 			_ = c.stream.CloseSend()
 			_ = c.conn.Close()
 		}
 
 		c.state.CompareAndSwap(TypeNone, TypeStopped)
-		if c.ch != nil {
-			c.ch.Close()
+		if c.zq != nil {
+			c.zq.Close()
 		}
 	}()
 
@@ -141,18 +149,18 @@ func (c *Client) reader() {
 			return
 		}
 
-		decoder := NewDecoder(in)
-		_ = decoder.Decode()
+		decoder := NewDecoder()
+		_ = decoder.Decode(in)
 
-		if err = c.ch.Send(decoder); !errors.Is(err, unbounded.ErrCancel) {
-			log.Println("reader send in failed: ", err.Error())
+		if c.zq.Write(decoder) {
+			log.Println("[Client] [reader] [zq.Write] send in failed")
 		}
 	}
 }
 
 // no blocking
-func (c *Client) input(v any) error {
-	return c.ch.Send(v)
+func (c *Client) input(v any) bool {
+	return c.zq.Write(v)
 }
 
 func (c *Client) loopInput() {
@@ -173,21 +181,26 @@ func (c *Client) loopInput() {
 		log.Println("client disconnect...")
 	}()
 
-	c.ch.Receive(func(in any) bool {
+	for {
+		in, open := c.zq.Read()
+		if !open {
+			log.Println("sender break")
+			break
+		}
 		c.handleMessage(in)
-		return false
-	})
+	}
 }
 
 func (c *Client) handleMessage(in any) {
 	defer func() {
-		if v := recover(); v != nil {
-			debug.PrintStack()
+		if r := recover(); r != nil {
+			log.Println(r)
+			log.Println("stack: ", string(debug.Stack()))
 		}
 	}()
 
 	switch reply := in.(type) {
-	case Decoder:
+	case *Decoder:
 		call, ok := c.pending.Pop(reply.seq)
 		if ok {
 			switch {

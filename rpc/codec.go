@@ -16,40 +16,38 @@ func (c Codec) encode(pid int64, seq uint32, category int8, out []byte) packet.I
 	if len(out) != 0 {
 		writer.Write(out)
 	}
-	pack := packet.Reader(out)
-	return pack
+	return writer
 }
 
 type Decoder struct {
-	r        packet.IPacket
 	category int8
 	seq      uint32
 	pid      int64
 	buf      []byte
 }
 
-func NewDecoder(in packet.IPacket) Decoder {
-	d := decodersPool.Get().(Decoder)
-	d.r = in
+func NewDecoder() *Decoder {
+	d := decodersPool.Get().(*Decoder)
 	return d
 }
 
-func (d Decoder) Decode() error {
+func (d *Decoder) Decode(in packet.IPacket) error {
+	defer in.Return()
 	var err error
-	d.pid, err = d.r.ReadInt64()
+	d.pid, err = in.ReadInt64()
 	if err != nil {
 		return fmt.Errorf("decode pid failed: %s", err.Error())
 	}
-	d.seq, err = d.r.ReadUint32()
+	d.seq, err = in.ReadUint32()
 	if err != nil {
 		return fmt.Errorf("decode seq failed: %s", err.Error())
 	}
-	d.category, err = d.r.ReadInt8()
+	d.category, err = in.ReadInt8()
 	if err != nil {
 		return fmt.Errorf("decode category failed: %s", err.Error())
 	}
 
-	r := d.r.Remain()
+	r := in.Remain()
 	length := len(r)
 	dst := make([]byte, length)
 	copy(dst, r)
@@ -57,14 +55,10 @@ func (d Decoder) Decode() error {
 	return nil
 }
 
-func (d Decoder) Return() {
+func (d *Decoder) Return() {
 	d.buf = nil
 	d.pid = 0
 	d.seq = 0
 	d.category = 0
-	if d.r != nil {
-		d.r.Return()
-		d.r = nil
-	}
 	decodersPool.Put(d)
 }

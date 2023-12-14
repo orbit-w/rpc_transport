@@ -6,9 +6,7 @@ import (
 )
 
 var (
-	callPool = sync.Pool{New: func() any {
-		return new(Call)
-	}}
+	callPool = sync.Pool{}
 
 	replyPool = sync.Pool{New: func() any {
 		return new(Reply)

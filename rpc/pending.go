@@ -1,9 +1,7 @@
 package rpc
 
 import (
-	"errors"
 	"github.com/orbit-w/mmrpc/rpc/callb"
-	"github.com/orbit-w/orbit-net/core/unbounded"
 	"log"
 	"sync"
 	"time"
@@ -21,7 +19,7 @@ const (
 
 type Pending struct {
 	timeout time.Duration
-	m       [BucketNum]sync.Map
+	buckets [BucketNum]sync.Map
 	cli     *Client
 	to      *Timeout[uint32]
 }
@@ -30,35 +28,35 @@ func (p *Pending) Init(cli *Client, _timeout time.Duration) {
 	p.timeout = _timeout
 	p.cli = cli
 	p.to = NewTimeoutMgr[uint32](_timeout, func(ids []uint32) {
-		err := p.cli.input(timeoutListMsg{
+		if p.cli.input(timeoutListMsg{
 			ids: ids,
-		})
-		if err != nil {
-			if !errors.Is(err, unbounded.ErrCancel) {
-				log.Println("handle send timeoutListMsg failed: ", err.Error())
-			}
+		}) {
+			log.Println("[Pending] [Init] handle send timeoutListMsg failed")
 		}
 	})
 }
 
-func (p *Pending) Push(req callb.ICall) {
-	id := req.Id()
-	p.m[id%BucketNum].Store(id, req)
-	if req.IsAsyncInvoker() {
-		p.to.Push(req.Id())
+func (p *Pending) Push(call callb.ICall) {
+	id := call.Id()
+	bucket := id % BucketNum
+	p.buckets[bucket].Store(id, call)
+	if call.IsAsyncInvoker() {
+		p.to.Push(call.Id())
 	}
 	return
 }
 
 func (p *Pending) Pop(id uint32) (callb.ICall, bool) {
-	v, exist := p.m[id%BucketNum].LoadAndDelete(id)
+	bucket := id % BucketNum
+	v, exist := p.buckets[bucket].LoadAndDelete(id)
+	var call callb.ICall
 	if exist {
-		req := v.(callb.ICall)
-		if req.IsAsyncInvoker() {
+		call = v.(callb.ICall)
+		if call.IsAsyncInvoker() {
 			p.to.Pop(id)
 		}
 	}
-	return nil, false
+	return call, exist
 }
 
 func (p *Pending) OnClose() {
@@ -66,8 +64,8 @@ func (p *Pending) OnClose() {
 }
 
 func (p *Pending) RangeAll(iter func(id uint32)) {
-	for i := range p.m {
-		p.m[i].Range(func(key, value any) bool {
+	for i := range p.buckets {
+		p.buckets[i].Range(func(key, value any) bool {
 			iter(key.(uint32))
 			return true
 		})
