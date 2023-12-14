@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"github.com/orbit-w/mmrpc/rpc/callb"
+	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 	"log"
 	"sync"
 	"time"
@@ -28,10 +29,12 @@ func (p *Pending) Init(cli *Client, _timeout time.Duration) {
 	p.timeout = _timeout
 	p.cli = cli
 	p.to = NewTimeoutMgr[uint32](_timeout, func(ids []uint32) {
-		if p.cli.input(timeoutListMsg{
+		if err := p.cli.input(timeoutListMsg{
 			ids: ids,
-		}) {
-			log.Println("[Pending] [Init] handle send timeoutListMsg failed")
+		}); err != nil {
+			if !mmrpcs.IsCancelError(err) {
+				log.Println("[Pending] [Init] handle send timeoutListMsg failed")
+			}
 		}
 	})
 }

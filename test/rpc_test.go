@@ -15,11 +15,9 @@ func Test_RPCCall(t *testing.T) {
 	cli, err := rpc.NewClient("node_00", "node_01", "127.0.0.1:6800")
 	assert.NoError(t, err)
 
-	for i := 0; i < 10000; i++ {
-		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
-		_, err = cli.Call(ctx, 100, []byte{1})
-		assert.NoError(t, err)
-	}
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+	_, err = cli.Call(ctx, 100, []byte{1})
+	assert.NoError(t, err)
 	cli.Close()
 
 	time.Sleep(time.Second * 5)

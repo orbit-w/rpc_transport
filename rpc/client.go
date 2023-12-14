@@ -3,8 +3,8 @@ package rpc
 import (
 	"context"
 	"errors"
-	"github.com/alphadose/zenq/v2"
 	"github.com/orbit-w/golib/bases/packet"
+	"github.com/orbit-w/golib/modules/unbounded"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 	"github.com/orbit-w/orbit-net/core/stream_transport"
 	"github.com/orbit-w/orbit-net/core/stream_transport/metadata"
@@ -70,7 +70,7 @@ type Client struct {
 	conn       stream_transport.IClientConn
 	codec      Codec
 	pending    *Pending
-	zq         *zenq.ZenQ[any]
+	ch         unbounded.IUnbounded[any]
 }
 
 func NewClient(id, remoteId, remoteAddr string) (IClient, error) {
@@ -80,7 +80,7 @@ func NewClient(id, remoteId, remoteAddr string) (IClient, error) {
 		remoteId:   remoteId,
 		timeout:    RpcTimeout,
 		pending:    new(Pending),
-		zq:         zenq.New[any](2048),
+		ch:         unbounded.New[any](2048),
 	}
 
 	cli.conn = stream_transport.DialWithOps(remoteAddr, id)
@@ -138,8 +138,8 @@ func (c *Client) reader() {
 		}
 
 		c.state.CompareAndSwap(TypeNone, TypeStopped)
-		if c.zq != nil {
-			c.zq.Close()
+		if c.ch != nil {
+			c.ch.Close()
 		}
 	}()
 
@@ -152,15 +152,17 @@ func (c *Client) reader() {
 		decoder := NewDecoder()
 		_ = decoder.Decode(in)
 
-		if c.zq.Write(decoder) {
-			log.Println("[Client] [reader] [zq.Write] send in failed")
+		if err = c.ch.Send(decoder); err != nil {
+			if !mmrpcs.IsCancelError(err) {
+				log.Println("[Client] [reader] [zq.Write] send in failed")
+			}
 		}
 	}
 }
 
 // no blocking
-func (c *Client) input(v any) bool {
-	return c.zq.Write(v)
+func (c *Client) input(v any) error {
+	return c.ch.Send(v)
 }
 
 func (c *Client) loopInput() {
@@ -181,14 +183,10 @@ func (c *Client) loopInput() {
 		log.Println("client disconnect...")
 	}()
 
-	for {
-		in, open := c.zq.Read()
-		if !open {
-			log.Println("sender break")
-			break
-		}
-		c.handleMessage(in)
-	}
+	c.ch.Receive(func(msg any) bool {
+		c.handleMessage(msg)
+		return false
+	})
 }
 
 func (c *Client) handleMessage(in any) {
