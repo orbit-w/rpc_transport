@@ -8,16 +8,19 @@ import (
 	"time"
 )
 
-func Test_RPC(t *testing.T) {
+func Test_RPCCall(t *testing.T) {
 	err := rpc.Serve("127.0.0.1:6800", nil)
 	assert.NoError(t, err)
 
 	cli, err := rpc.NewClient("node_00", "node_01", "127.0.0.1:6800")
 	assert.NoError(t, err)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer func() {
-		cancel()
-	}()
-	_, err = cli.Call(ctx, 100, []byte{1})
-	assert.NoError(t, err)
+
+	for i := 0; i < 10000; i++ {
+		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+		_, err = cli.Call(ctx, 100, []byte{1})
+		assert.NoError(t, err)
+	}
+	cli.Close()
+
+	time.Sleep(time.Second * 5)
 }
