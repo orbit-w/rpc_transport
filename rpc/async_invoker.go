@@ -31,5 +31,8 @@ func (i *AsyncInvoker) Invoke(in []byte, err error) error {
 	if invokeCB != nil {
 		return invokeCB(i.ctx, in, err)
 	}
-	return i.handler(i.ctx, in, err)
+	if i.handler != nil {
+		return i.handler(i.ctx, in, err)
+	}
+	return defineInvokeCB(i.ctx, in, err)
 }

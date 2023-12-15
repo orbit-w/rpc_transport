@@ -3,11 +3,13 @@ package rpc
 import (
 	"github.com/orbit-w/mmrpc/rpc/callb"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
-	"log"
 )
 
 var (
-	invokeCB func(ctx any, in []byte, err error) error
+	invokeCB       func(ctx any, in []byte, err error) error
+	defineInvokeCB = func(ctx any, in []byte, err error) error {
+		return nil
+	}
 )
 
 // SetInvokeCB Set global asynchronous callback
@@ -21,9 +23,7 @@ func (c *Client) AsyncCall(pid int64, out []byte, ctx any) error {
 	}
 	seq := c.seq.Add(1)
 	req := callb.NewCallWithInvoker(seq, NewAsyncInvoker(ctx, nil))
-	log.Println("AsyncCall start ...")
 	c.pending.Push(req)
-	log.Println("AsyncCall push ...")
 	pack := c.codec.encode(pid, seq, RpcAsyncCall, out)
 	defer pack.Return()
 	if err := c.stream.Send(pack); err != nil {
@@ -31,7 +31,6 @@ func (c *Client) AsyncCall(pid int64, out []byte, ctx any) error {
 		req.Return()
 		return err
 	}
-	log.Println("AsyncCall...")
 	return nil
 }
 

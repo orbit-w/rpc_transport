@@ -12,6 +12,8 @@ import (
    @2023 12月 周五 23:16
 */
 
+// IRequest To avoid IRequest resource leakage,
+// IRequest requires the receiver to call Return() to return it to the pool
 type IRequest interface {
 	Pid() int64
 	NewReader() io.Reader

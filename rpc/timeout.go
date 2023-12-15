@@ -26,14 +26,13 @@ type Timeout struct {
 
 func NewTimeoutMgr(timeout time.Duration, cb func([]uint32)) *Timeout {
 	t := &Timeout{
-		mu:       sync.Mutex{},
 		max:      MaxCheck,
 		timeout:  int64(timeout / time.Second),
 		skipList: skiplist.New(skiplist.Uint32),
 		callback: cb,
 	}
 	t.state.Store(TTypeRunning)
-	//t.schedule()
+	t.schedule()
 	return t
 }
 
@@ -67,35 +66,20 @@ func (t *Timeout) check() {
 	ids := make([]uint32, 0, 1<<3)
 	var num uint32
 	t.mu.Lock()
-	t.skipList.Front()
-
 	for {
-		head := t.skipList.Front()
-		if head == nil || head.Value.(int64) > max {
+		front := t.skipList.Front()
+		if front == nil {
 			break
 		}
-
-		s := head.Value.(int64)
-
-		h.h.Pop()
-		v := head.Value
-		key := v.GetKey()
-		delete(h.items, key)
-
-		if !iter(key, v.Value) {
+		expireAt := front.Value.(int64)
+		if expireAt > now {
 			break
 		}
-	}
-
-	t.skipList.RemoveFront()
-	t.heapList.PopByScore(now, func(k T, _ int8) bool {
-		if t.max > 0 && num >= t.max {
-			return false
-		}
-		ids = append(ids, k)
+		t.skipList.RemoveFront()
+		id := front.Key().(uint32)
+		ids = append(ids, id)
 		num++
-		return true
-	})
+	}
 	t.mu.Unlock()
 	if num > 0 {
 		t.callback(ids)

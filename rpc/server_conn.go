@@ -62,7 +62,6 @@ func (c *Conn) handleRequest(in packet.IPacket) {
 			log.Println(r)
 			log.Println("stack: ", string(debug.Stack()))
 		}
-		req.Return()
 	}()
 
 	switch req.Category() {

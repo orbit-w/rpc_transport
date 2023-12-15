@@ -22,13 +22,13 @@ type Pending struct {
 	timeout time.Duration
 	buckets [BucketNum]sync.Map
 	cli     *Client
-	to      *Timeout[uint32]
+	to      *Timeout
 }
 
 func (p *Pending) Init(cli *Client, _timeout time.Duration) {
 	p.timeout = _timeout
 	p.cli = cli
-	p.to = NewTimeoutMgr[uint32](_timeout, func(ids []uint32) {
+	p.to = NewTimeoutMgr(_timeout, func(ids []uint32) {
 		if err := p.cli.input(timeoutListMsg{
 			ids: ids,
 		}); err != nil {
