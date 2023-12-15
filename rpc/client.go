@@ -26,10 +26,14 @@ import (
 //
 //		1: Call
 //	 	2: Asynchronous Call
+//		3: Shoot
 //
 // When the transport connection is disconnected, all Call or asynchronous Call requests in the waiting queue
 // will return and receive the error 'rpc err: disconnect'
 type IClient interface {
+	//Shoot is a one-way communication, the sender does not pay attention to the receiver's reply
+	Shoot(pid int64, out []byte) error
+
 	// Call performs a unary RPC and returns after the response is received
 	// into replyMsg.
 	// Support users to use context to cancel blocking status or perform timeout operations
@@ -52,12 +56,6 @@ type IClient interface {
 	// Close can be called repeatedly
 	Close()
 }
-
-const (
-	TypeNone = iota
-	TypeRunning
-	TypeStopped
-)
 
 type Client struct {
 	id         string
@@ -84,7 +82,6 @@ func NewClient(id, remoteId, remoteAddr string) (IClient, error) {
 	}
 
 	cli.conn = stream_transport.DialWithOps(remoteAddr, id)
-	//携带私密信息用于验证
 	stream, err := cli.conn.NewStream(metadata.NewMetaContext(context.Background(), map[string]string{
 		"nodeId": id,
 	}))
@@ -114,6 +111,14 @@ func (c *Client) Close() {
 			_ = c.conn.Close()
 		}
 	}
+}
+
+func (c *Client) Shoot(pid int64, out []byte) error {
+	if c.state.Load() == TypeStopped {
+		return mmrpcs.ErrDisconnect
+	}
+	pack := c.codec.encode(pid, 0, RpcRaw, out)
+	return c.stream.Send(pack)
 }
 
 func (c *Client) reader() {
@@ -167,6 +172,7 @@ func (c *Client) input(v any) error {
 
 func (c *Client) loopInput() {
 	defer func() {
+		//TODO: 有没有DeadLock 风险？
 		c.pending.RangeAll(func(id uint32) {
 			call, ok := c.pending.Pop(id)
 			if ok {
@@ -180,7 +186,7 @@ func (c *Client) loopInput() {
 			}
 		})
 		c.pending.OnClose()
-		log.Println("client disconnect...")
+		log.Println("[Client] disconnect...")
 	}()
 
 	c.ch.Receive(func(msg any) bool {

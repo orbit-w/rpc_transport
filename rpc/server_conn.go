@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"errors"
+	"github.com/orbit-w/golib/bases/packet"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 	"github.com/orbit-w/orbit-net/core/stream_transport"
 	"io"
@@ -45,25 +46,29 @@ func (c *Conn) reader() {
 			}
 			return
 		}
-		if in == nil {
-			log.Println("wo cao")
-		}
-		req, err := NewRequest(c, in)
-		if err != nil {
-			log.Println("[ServerConn] [reader] new request failed: ", err.Error())
-			continue
-		}
-		c.handleRequest(req)
+
+		c.handleRequest(in)
 	}
 }
 
-func (c *Conn) handleRequest(req IRequest) {
+func (c *Conn) handleRequest(in packet.IPacket) {
+	req, err := NewRequest(c, in)
+	if err != nil {
+		log.Println("[ServerConn] [reader] new request failed: ", err.Error())
+		return
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			log.Println(r)
 			log.Println("stack: ", string(debug.Stack()))
 		}
+		req.Return()
 	}()
-	//TODO：need to handle user-level errors?
+
+	switch req.Category() {
+	case RpcRaw:
+		req.IgnoreRsp()
+	}
+
 	_ = gRequestHandle(req)
 }

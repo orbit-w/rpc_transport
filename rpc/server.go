@@ -39,6 +39,7 @@ func setTestHandle() {
 	gRequestHandle = func(req IRequest) error {
 		//log.Println("receive request")
 		_ = req.Response([]byte{1})
+		req.Return()
 		return nil
 	}
 }

@@ -16,6 +16,13 @@ const (
 	RpcTimeout = time.Second * 5
 )
 
+// Client state enum
+const (
+	TypeNone = iota
+	TypeRunning
+	TypeStopped
+)
+
 type (
 	replyMsg struct {
 		category int8

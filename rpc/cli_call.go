@@ -16,7 +16,8 @@ func (c *Client) Call(ctx context.Context, pid int64, out []byte) ([]byte, error
 
 	c.pending.Push(call)
 	pack := c.codec.encode(pid, seq, RpcCall, out)
-	if err := c.stream.Send(pack); err != nil {
+	defer pack.Return()
+	if err := c.stream.SendData(pack.Data()); err != nil {
 		c.pending.Pop(seq)
 		call.Return()
 		return nil, err
