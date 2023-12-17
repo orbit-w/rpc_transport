@@ -17,12 +17,11 @@ func (c *Client) Call(ctx context.Context, pid int64, out []byte) ([]byte, error
 	c.pending.Push(call)
 	pack := c.codec.encode(pid, seq, RpcCall, out)
 	defer pack.Return()
-	if err := c.stream.SendData(pack.Data()); err != nil {
+	if err := c.conn.Write(pack); err != nil {
 		c.pending.Pop(seq)
 		call.Return()
 		return nil, err
 	}
-
 	select {
 	case reply := <-call.Done():
 		data, err := reply.In()

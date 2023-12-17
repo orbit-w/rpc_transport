@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"github.com/orbit-w/orbit-net/core/stream_transport"
+	"github.com/orbit-w/mmrpc/rpc/transport"
 	"net"
 )
 
@@ -17,13 +17,13 @@ func Serve(host string, rh RequestHandle) error {
 		return err
 	}
 
-	server := new(stream_transport.Server)
-	server.Serve(listener, func(stream stream_transport.IStreamServer) error {
+	server := new(transport.Server)
+	server.Serve(listener, func(conn transport.IConn) error {
 		//ctx := stream.Context()
 		//md, _ := metadata.FromMetaContext(ctx)
 		//nodeId, _ := md.GetValue("nodeId")
 		//log.Println("Connection established successfully, client nodeId: ", nodeId)
-		NewConn(stream)
+		NewConn(conn)
 		return nil
 	})
 	return nil

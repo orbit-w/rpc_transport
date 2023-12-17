@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/orbit-w/golib/bases/packet"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
-	"github.com/orbit-w/orbit-net/core/stream_transport"
+	"github.com/orbit-w/mmrpc/rpc/transport"
 	"io"
 	"log"
 	"runtime/debug"
@@ -16,33 +16,37 @@ type ISession interface {
 
 type Conn struct {
 	Codec
-	stream stream_transport.IStreamServer
+	conn transport.IConn
 }
 
-func NewConn(stream stream_transport.IStreamServer) {
-	conn := Conn{}
-	conn.stream = stream
-	conn.reader()
+func NewConn(conn transport.IConn) {
+	sConn := Conn{}
+	sConn.conn = conn
+	sConn.reader()
 }
 
 func (c *Conn) Send(pid int64, seq uint32, category int8, out []byte) error {
 	pack := c.Codec.encode(pid, seq, category, out)
-	return c.stream.Send(pack)
+	defer pack.Return()
+	return c.conn.Write(pack)
 }
 
 func (c *Conn) Close() {
-	_ = c.stream.Close("")
+	_ = c.conn.Close()
 }
 
 func (c *Conn) reader() {
+	defer func() {
+		_ = c.conn.Close()
+	}()
 	for {
-		in, err := c.stream.Recv()
+		in, err := c.conn.Recv()
 		if err != nil {
 			switch {
 			case mmrpcs.IsCancelError(err):
 			case errors.Is(err, io.EOF):
 			default:
-				log.Println("conn read stream failed: ", err.Error())
+				log.Println("conn read failed: ", err.Error())
 			}
 			return
 		}

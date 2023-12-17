@@ -14,16 +14,18 @@ import (
 )
 
 func Test_RPCCall(t *testing.T) {
-	err := rpc.Serve("127.0.0.1:6800", nil)
+	host := "127.0.0.1:6900"
+	err := rpc.Serve(host, nil)
 	assert.NoError(t, err)
 
-	cli, err := rpc.NewClient("node_00", "node_01", "127.0.0.1:6800")
+	cli, err := rpc.NewClient("node_00", "node_01", host)
 	assert.NoError(t, err)
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
-	_, err = cli.Call(ctx, 100, []byte{1})
-	assert.NoError(t, err)
-	cli.Close()
+	for i := 0; i < 100000; i++ {
+		in, err := cli.Call(context.Background(), 100, []byte{1})
+		assert.NoError(t, err)
+		log.Println(in[0])
+	}
 
 	time.Sleep(time.Second * 5)
 }
@@ -110,6 +112,6 @@ func TestAsyncCallTimeout(t *testing.T) {
 
 func StartPProf() {
 	go func() {
-		log.Println(http.ListenAndServe("127.0.0.1:6060", nil))
+		log.Println(http.ListenAndServe("127.0.0.1:6999", nil))
 	}()
 }

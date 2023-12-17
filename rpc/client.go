@@ -6,8 +6,7 @@ import (
 	"github.com/orbit-w/golib/bases/packet"
 	"github.com/orbit-w/golib/modules/unbounded"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
-	"github.com/orbit-w/orbit-net/core/stream_transport"
-	"github.com/orbit-w/orbit-net/core/stream_transport/metadata"
+	"github.com/orbit-w/mmrpc/rpc/transport"
 	"io"
 	"log"
 	"runtime/debug"
@@ -64,8 +63,7 @@ type Client struct {
 	state      atomic.Uint32
 	seq        atomic.Uint32
 	timeout    time.Duration
-	stream     stream_transport.IStreamClient
-	conn       stream_transport.IClientConn
+	conn       transport.IConn
 	codec      Codec
 	pending    *Pending
 	ch         unbounded.IUnbounded[any]
@@ -81,20 +79,14 @@ func NewClient(id, remoteId, remoteAddr string) (IClient, error) {
 		ch:         unbounded.New[any](2048),
 	}
 
-	cli.conn = stream_transport.DialWithOps(remoteAddr, id)
-	stream, err := cli.conn.NewStream(metadata.NewMetaContext(context.Background(), map[string]string{
-		"nodeId": id,
-	}))
-	if err != nil {
-		_ = cli.conn.Close()
-		return nil, err
-	}
-	cli.stream = stream
+	cli.conn = transport.DialWithOps(cli.remoteAddr, &transport.DialOption{
+		CurrentNodeId: id,
+		RemoteNodeId:  remoteId,
+	})
 	cli.pending.Init(cli, cli.timeout)
 	if !cli.state.CompareAndSwap(TypeNone, TypeRunning) {
-		_ = cli.stream.CloseSend()
 		_ = cli.conn.Close()
-		return nil, err
+		return nil, mmrpcs.ErrDisconnect
 	}
 	go cli.loopInput()
 	go cli.reader()
@@ -103,10 +95,6 @@ func NewClient(id, remoteId, remoteAddr string) (IClient, error) {
 
 func (c *Client) Close() {
 	if c.state.CompareAndSwap(TypeRunning, TypeStopped) {
-		if c.stream != nil {
-			_ = c.stream.CloseSend()
-		}
-		time.Sleep(time.Second)
 		if c.conn != nil {
 			_ = c.conn.Close()
 		}
@@ -118,7 +106,7 @@ func (c *Client) Shoot(pid int64, out []byte) error {
 		return mmrpcs.ErrDisconnect
 	}
 	pack := c.codec.encode(pid, 0, RpcRaw, out)
-	return c.stream.Send(pack)
+	return c.conn.Write(pack)
 }
 
 func (c *Client) reader() {
@@ -138,7 +126,6 @@ func (c *Client) reader() {
 		}
 
 		if c.state.CompareAndSwap(TypeRunning, TypeStopped) {
-			_ = c.stream.CloseSend()
 			_ = c.conn.Close()
 		}
 
@@ -149,11 +136,10 @@ func (c *Client) reader() {
 	}()
 
 	for {
-		in, err = c.stream.Recv()
+		in, err = c.conn.Recv()
 		if err != nil {
 			return
 		}
-
 		decoder := NewDecoder()
 		_ = decoder.Decode(in)
 

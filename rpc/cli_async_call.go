@@ -26,7 +26,7 @@ func (c *Client) AsyncCall(pid int64, out []byte, ctx any) error {
 	c.pending.Push(req)
 	pack := c.codec.encode(pid, seq, RpcAsyncCall, out)
 	defer pack.Return()
-	if err := c.stream.Send(pack); err != nil {
+	if err := c.conn.Write(pack); err != nil {
 		c.pending.Pop(seq)
 		req.Return()
 		return err
@@ -43,7 +43,7 @@ func (c *Client) AsyncCallC(pid int64, out []byte, ctx any, cb func(ctx any, in 
 	c.pending.Push(req)
 	pack := c.codec.encode(pid, seq, RpcAsyncCall, out)
 	defer pack.Return()
-	if err := c.stream.Send(pack); err != nil {
+	if err := c.conn.Write(pack); err != nil {
 		c.pending.Pop(seq)
 		req.Return()
 		return err
