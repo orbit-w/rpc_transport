@@ -43,7 +43,7 @@ func Test_Transport(t *testing.T) {
 	w.Write([]byte{1})
 	_ = conn.Write(w)
 
-	time.Sleep(time.Minute * 10)
+	time.Sleep(time.Second * 10)
 }
 
 func Benchmark_Send_Test(b *testing.B) {

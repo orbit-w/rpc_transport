@@ -23,12 +23,11 @@ type TcpServer struct {
 	conn     net.Conn
 	codec    *TcpCodec
 	msgCodec *Codec
-	sw       *SenderWrapper
-	buf      *ControlBuffer
-	rb       *ReceiveBuf
-	recvCh   <-chan RecvMsg
 	ctx      context.Context
 	cancel   context.CancelFunc
+	sw       *SenderWrapper
+	buf      *ControlBuffer
+	r        iReceiver
 }
 
 func NewServerConn(ctx context.Context, _conn net.Conn, ops *ConnOption) IConn {
@@ -36,14 +35,12 @@ func NewServerConn(ctx context.Context, _conn net.Conn, ops *ConnOption) IConn {
 		ctx = context.Background()
 	}
 	cCtx, cancel := context.WithCancel(ctx)
-	rb := NewReceiveBuf()
 	ts := &TcpServer{
 		conn:   _conn,
 		codec:  NewTcpCodec(ops.MaxIncomingPacket, false),
 		ctx:    cCtx,
 		cancel: cancel,
-		rb:     rb,
-		recvCh: rb.get(),
+		r:      newReceiver(),
 	}
 
 	sw := NewSender(ts.SendData)
@@ -64,21 +61,10 @@ func (ts *TcpServer) Write(data packet.IPacket) (err error) {
 }
 
 func (ts *TcpServer) Recv() (packet.IPacket, error) {
-	select {
-	case msg, ok := <-ts.recvCh:
-		if !ok {
-			return nil, mmrpcs.ErrCanceled
-		}
-		if msg.err != nil {
-			return msg.buf, msg.err
-		}
-		ts.rb.load()
-		return msg.buf, nil
-	}
+	return ts.r.read()
 }
 
 func (ts *TcpServer) Close() error {
-	log.Println("4444")
 	return ts.conn.Close()
 }
 
@@ -112,7 +98,7 @@ func (ts *TcpServer) HandleLoop() {
 			log.Println(r)
 			log.Println("stack: ", string(debug.Stack()))
 		}
-		ts.onClose()
+		ts.r.onClose(mmrpcs.ErrCanceled)
 		ts.buf.OnClose()
 		if ts.conn != nil {
 			_ = ts.conn.Close()
@@ -138,12 +124,6 @@ func (ts *TcpServer) HandleLoop() {
 	}
 }
 
-func (ts *TcpServer) onClose() {
-	_ = ts.rb.put(RecvMsg{
-		err: mmrpcs.ErrCanceled,
-	})
-}
-
 func (ts *TcpServer) OnData(data packet.IPacket) error {
 	defer data.Return()
 	for len(data.Remain()) > 0 {
@@ -164,8 +144,6 @@ func (ts *TcpServer) HandleData(in packet.IPacket) {
 		ack.Return()
 	case TypeMessageHeartbeatAck:
 	default:
-		_ = ts.rb.put(RecvMsg{
-			buf: data,
-		})
+		ts.r.put(data, nil)
 	}
 }

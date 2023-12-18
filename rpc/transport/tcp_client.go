@@ -36,8 +36,7 @@ type TcpClient struct {
 	conn    net.Conn
 	buf     *ControlBuffer
 	sw      *SenderWrapper
-	rb      *ReceiveBuf
-	recvCh  <-chan RecvMsg
+	r       iReceiver
 	dHandle func(remoteNodeId string)
 }
 
@@ -46,7 +45,6 @@ func DialWithOps(remoteAddr string, _ops ...*DialOption) IConn {
 	ctx, cancel := context.WithCancel(context.Background())
 	buf := new(ControlBuffer)
 	BuildControlBuffer(buf, dp.MaxIncomingPacket)
-	rb := NewReceiveBuf()
 	tc := &TcpClient{
 		mu:            sync.Mutex{},
 		remoteAddr:    remoteAddr,
@@ -57,8 +55,7 @@ func DialWithOps(remoteAddr string, _ops ...*DialOption) IConn {
 		ctx:           ctx,
 		cancel:        cancel,
 		codec:         NewTcpCodec(dp.MaxIncomingPacket, false),
-		rb:            rb,
-		recvCh:        rb.get(),
+		r:             newReceiver(),
 	}
 
 	if dp.IsBlock {
@@ -78,17 +75,7 @@ func (tc *TcpClient) Write(out packet.IPacket) error {
 }
 
 func (tc *TcpClient) Recv() (packet.IPacket, error) {
-	select {
-	case msg, ok := <-tc.recvCh:
-		if !ok {
-			return nil, mmrpcs.ErrCanceled
-		}
-		if msg.err != nil {
-			return msg.buf, msg.err
-		}
-		tc.rb.load()
-		return msg.buf, nil
-	}
+	return tc.r.read()
 }
 
 func (tc *TcpClient) Close() error {
@@ -121,13 +108,13 @@ func (tc *TcpClient) handleDial(_ *DialOption) {
 		tc.mu.Lock()
 		defer tc.mu.Unlock()
 		tc.state.Store(StatusDisconnected)
-		tc.onClose()
+		tc.r.onClose(mmrpcs.ErrCanceled)
 		return
 	}
 
 	defer func() {
 		if tc.state.CompareAndSwap(StatusConnected, StatusDisconnected) {
-			tc.onClose()
+			tc.r.onClose(mmrpcs.ErrCanceled)
 		}
 	}()
 
@@ -137,12 +124,6 @@ func (tc *TcpClient) handleDial(_ *DialOption) {
 	tc.buf.Run(tc.sw)
 	go tc.keepalive()
 	<-tc.ctx.Done()
-}
-
-func (tc *TcpClient) onClose() {
-	_ = tc.rb.put(RecvMsg{
-		err: mmrpcs.ErrCanceled,
-	})
 }
 
 func (tc *TcpClient) SendData(data packet.IPacket) error {
@@ -239,9 +220,7 @@ func (tc *TcpClient) decodeRspAndDispatch(body packet.IPacket) error {
 		return nil
 	default:
 		if data != nil {
-			_ = tc.rb.put(RecvMsg{
-				buf: data,
-			})
+			tc.r.put(data, nil)
 		}
 	}
 	return nil

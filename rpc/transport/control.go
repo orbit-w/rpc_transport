@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"github.com/orbit-w/golib/bases/packet"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 	err "github.com/orbit-w/orbit-net/core/stream_transport/transport_err"
 	"sync"
@@ -13,43 +12,42 @@ import (
    @2023 11月 周日 16:11
 */
 
-type RecvMsg struct {
-	buf packet.IPacket
-	err error
+type iRecvMsg interface {
+	Err() error
 }
 
 // ReceiveBuf TODO: 资源泄漏？
-type ReceiveBuf struct {
-	c   chan RecvMsg
+type ReceiveBuf[V iRecvMsg] struct {
+	c   chan V
 	mu  sync.Mutex
-	buf []RecvMsg
+	buf []V
 	err error
 }
 
-func NewReceiveBuf() *ReceiveBuf {
-	return &ReceiveBuf{
+func NewReceiveBuf[V iRecvMsg]() *ReceiveBuf[V] {
+	return &ReceiveBuf[V]{
 		mu:  sync.Mutex{},
-		c:   make(chan RecvMsg, 1),
-		buf: make([]RecvMsg, 0),
+		c:   make(chan V, 1),
+		buf: make([]V, 0),
 	}
 }
 
-func (rb *ReceiveBuf) OnClose() {
+func (rb *ReceiveBuf[V]) OnClose() {
 	rb.mu.Lock()
 	defer rb.mu.Unlock()
 	rb.err = mmrpcs.ErrCanceled
 	close(rb.c)
 }
 
-func (rb *ReceiveBuf) put(r RecvMsg) error {
+func (rb *ReceiveBuf[V]) put(r V) error {
 	rb.mu.Lock()
 	if rb.err != nil {
 		rb.mu.Unlock()
 		return err.ReceiveBufPutErr(rb.err)
 	}
 
-	if r.err != nil {
-		rb.err = r.err
+	if r.Err() != nil {
+		rb.err = r.Err()
 	}
 	if len(rb.buf) == 0 {
 		select {
@@ -64,12 +62,13 @@ func (rb *ReceiveBuf) put(r RecvMsg) error {
 	return nil
 }
 
-func (rb *ReceiveBuf) load() {
+func (rb *ReceiveBuf[V]) load() {
 	rb.mu.Lock()
 	if len(rb.buf) > 0 {
 		select {
 		case rb.c <- rb.buf[0]:
-			rb.buf[0] = RecvMsg{}
+			var v V
+			rb.buf[0] = v
 			rb.buf = rb.buf[1:]
 		default:
 		}
@@ -77,6 +76,6 @@ func (rb *ReceiveBuf) load() {
 	rb.mu.Unlock()
 }
 
-func (rb *ReceiveBuf) get() <-chan RecvMsg {
+func (rb *ReceiveBuf[V]) get() <-chan V {
 	return rb.c
 }
