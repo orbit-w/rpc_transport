@@ -64,7 +64,7 @@ func (tcd *TcpCodec) BlockDecodeBody(conn net.Conn, header, body []byte) (packet
 
 	body = body[:size]
 	if _, err = io.ReadFull(conn, body); err != nil {
-		return nil, transport_err.ReadBodyFailed(err)
+		return nil, mmrpcs.ReadBodyFailed(err)
 	}
 	buf := packet.Writer()
 	buf.Write(body)
