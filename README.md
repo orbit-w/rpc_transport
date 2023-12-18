@@ -9,25 +9,21 @@ and to provide stream-oriented multiplexing.
 
 ## Benchmark
 ```
-➜  test git:(master) ✗ go test -v -run=^$ -bench .
+➜  test git:(master) go test -v -run=^$ -bench .
 goos: darwin
 goarch: arm64
 pkg: github.com/orbit-w/mmrpc/test
 Benchmark_Call
-Benchmark_Call/benchmark_call
-Benchmark_Call/benchmark_call-8     	   40617	     28387 ns/op
+Benchmark_Call-8                    	   42051	     27242 ns/op
 Benchmark_Call_Concurrency
-Benchmark_Call_Concurrency-8        	  226645	      5150 ns/op
+Benchmark_Call_Concurrency-8        	  244790	      4985 ns/op
 Benchmark_Shoot
-Benchmark_Shoot/benchmark_call
-Benchmark_Shoot/benchmark_call-8    	 4058671	       263.8 ns/op
+Benchmark_Shoot-8                   	12651248	        94.77 ns/op
 Benchmark_Shoot_Concurrency
-Benchmark_Shoot_Concurrency-8       	 3804121	       306.0 ns/op
+Benchmark_Shoot_Concurrency-8       	 5256571	       240.8 ns/op
 Benchmark_AsyncCall
-Benchmark_AsyncCall/benchmark_call
-Benchmark_AsyncCall/benchmark_call-8         	  925357	      1111 ns/op
+Benchmark_AsyncCall-8               	 1066633	       988.8 ns/op
 Benchmark_AsyncCall_Concurrency
-Benchmark_AsyncCall_Concurrency-8            	 1000000	      1497 ns/op
+Benchmark_AsyncCall_Concurrency-8   	 1000000	      1211 ns/op
 PASS
-ok  	github.com/orbit-w/mmrpc/test	10.646s
-```
+ok  	github.com/orbit-w/mmrpc/test	9.350s
