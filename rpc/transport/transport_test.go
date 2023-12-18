@@ -93,7 +93,7 @@ func Serve(t TestingT, host string) {
 	assert.NoError(t, err)
 	log.Println("start serve...")
 	server := new(Server)
-	server.Serve(listener, func(conn IConn) error {
+	server.Serve(listener, func(conn IServerConn) error {
 		for {
 			in, err := conn.Recv()
 			if err != nil {
@@ -104,7 +104,7 @@ func Serve(t TestingT, host string) {
 				break
 			}
 			log.Println("receive message from client: ", in.Data()[0])
-			if err = conn.Write(in); err != nil {
+			if err = conn.Send(in); err != nil {
 				log.Println("server response failed: ", err.Error())
 			}
 			in.Return()

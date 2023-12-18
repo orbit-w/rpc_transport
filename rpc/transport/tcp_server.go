@@ -27,10 +27,10 @@ type TcpServer struct {
 	cancel   context.CancelFunc
 	sw       *SenderWrapper
 	buf      *ControlBuffer
-	r        iReceiver
+	r        *receiver
 }
 
-func NewServerConn(ctx context.Context, _conn net.Conn, ops *ConnOption) IConn {
+func NewServerConn(ctx context.Context, _conn net.Conn, ops *ConnOption) IServerConn {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -51,9 +51,9 @@ func NewServerConn(ctx context.Context, _conn net.Conn, ops *ConnOption) IConn {
 	return ts
 }
 
-// Write TcpServer obj does not implicitly call IPacket.Return to return the
+// Send TcpServer obj does not implicitly call IPacket.Return to return the
 // packet to the pool, and the user needs to explicitly call it.
-func (ts *TcpServer) Write(data packet.IPacket) (err error) {
+func (ts *TcpServer) Send(data packet.IPacket) (err error) {
 	pack := ts.msgCodec.encode(data, TypeMessageRaw)
 	err = ts.buf.Set(pack)
 	pack.Return()

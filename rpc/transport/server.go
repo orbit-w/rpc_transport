@@ -24,7 +24,7 @@ type Server struct {
 	ctx      context.Context
 	cancel   context.CancelFunc
 
-	handle func(conn IConn) error
+	handle func(conn IServerConn) error
 }
 
 type AcceptorOptions struct {
@@ -32,7 +32,7 @@ type AcceptorOptions struct {
 	IsGzip            bool
 }
 
-func (ins *Server) Serve(listener net.Listener, _handle func(conn IConn) error, ops ...AcceptorOptions) {
+func (ins *Server) Serve(listener net.Listener, _handle func(conn IServerConn) error, ops ...AcceptorOptions) {
 	op := parseAndWrapOP(ops...)
 	NewBodyPool(op.MaxIncomingPacket)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -65,7 +65,7 @@ func (ins *Server) acceptLoop() {
 	}
 }
 
-func (ins *Server) handleConn(conn IConn) {
+func (ins *Server) handleConn(conn IServerConn) {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {

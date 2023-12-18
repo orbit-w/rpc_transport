@@ -18,7 +18,7 @@ func Serve(host string, rh RequestHandle) error {
 	}
 
 	server := new(transport.Server)
-	server.Serve(listener, func(conn transport.IConn) error {
+	server.Serve(listener, func(conn transport.IServerConn) error {
 		//ctx := stream.Context()
 		//md, _ := metadata.FromMetaContext(ctx)
 		//nodeId, _ := md.GetValue("nodeId")

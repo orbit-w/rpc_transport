@@ -20,6 +20,7 @@ import (
    @2023 11月 周日 16:32
 */
 
+// TcpClient implements the IConn interface with TCP.
 type TcpClient struct {
 	mu            sync.Mutex
 	state         atomic.Uint32
@@ -36,10 +37,11 @@ type TcpClient struct {
 	conn    net.Conn
 	buf     *ControlBuffer
 	sw      *SenderWrapper
-	r       iReceiver
+	r       *receiver
 	dHandle func(remoteNodeId string)
 }
 
+// DialWithOps Encapsulates asynchronous TCP connection establishment (with retries and backoff)
 func DialWithOps(remoteAddr string, _ops ...*DialOption) IConn {
 	dp := parseOptions(_ops...)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -58,10 +60,7 @@ func DialWithOps(remoteAddr string, _ops ...*DialOption) IConn {
 		r:             newReceiver(),
 	}
 
-	if dp.IsBlock {
-		//TODO: 阻塞模式？
-	}
-	tc.DialWithOps(dp)
+	go tc.handleDial(dp)
 	return tc
 }
 
@@ -83,10 +82,6 @@ func (tc *TcpClient) Close() error {
 		_ = tc.conn.Close()
 	}
 	return nil
-}
-
-func (tc *TcpClient) DialWithOps(ops *DialOption) {
-	go tc.handleDial(ops)
 }
 
 func (tc *TcpClient) handleDial(_ *DialOption) {
@@ -281,6 +276,7 @@ func withRetry(handle func() error) error {
 		if err == nil {
 			return nil
 		}
+		//exponential backoff
 		time.Sleep(time.Millisecond * time.Duration(100<<retried))
 		if retried >= MaxRetried {
 			return mmrpcs.ErrMaxOfRetry

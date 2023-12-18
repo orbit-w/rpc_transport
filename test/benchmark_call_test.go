@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
-	"time"
 )
 
 const (
@@ -55,7 +54,6 @@ func Benchmark_Shoot(b *testing.B) {
 	StartServe(b, nil)
 	cli, err := rpc.NewClient("node_00", "node_01", host)
 	assert.NoError(b, err)
-	time.Sleep(time.Second * 2)
 	msg := []byte{2}
 	pid := int64(100)
 	b.ResetTimer()

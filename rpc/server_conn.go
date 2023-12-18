@@ -16,10 +16,10 @@ type ISession interface {
 
 type Conn struct {
 	Codec
-	conn transport.IConn
+	conn transport.IServerConn
 }
 
-func NewConn(conn transport.IConn) {
+func NewConn(conn transport.IServerConn) {
 	sConn := Conn{}
 	sConn.conn = conn
 	sConn.reader()
@@ -28,7 +28,7 @@ func NewConn(conn transport.IConn) {
 func (c *Conn) Send(pid int64, seq uint32, category int8, out []byte) error {
 	pack := c.Codec.encode(pid, seq, category, out)
 	defer pack.Return()
-	return c.conn.Write(pack)
+	return c.conn.Send(pack)
 }
 
 func (c *Conn) Close() {

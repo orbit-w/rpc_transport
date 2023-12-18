@@ -2,7 +2,6 @@ package transport
 
 import (
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
-	err "github.com/orbit-w/orbit-net/core/stream_transport/transport_err"
 	"sync"
 )
 
@@ -43,7 +42,7 @@ func (rb *ReceiveBuf[V]) put(r V) error {
 	rb.mu.Lock()
 	if rb.err != nil {
 		rb.mu.Unlock()
-		return err.ReceiveBufPutErr(rb.err)
+		return mmrpcs.ReceiveBufPutErr(rb.err)
 	}
 
 	if r.Err() != nil {
