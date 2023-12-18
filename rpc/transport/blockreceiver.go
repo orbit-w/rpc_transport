@@ -25,7 +25,7 @@ type receiver struct {
 	buf *ReceiveBuf[recvMsg]
 }
 
-func newReceiver() iReceiver {
+func newReceiver() *receiver {
 	return &receiver{
 		buf: NewReceiveBuf[recvMsg](),
 	}

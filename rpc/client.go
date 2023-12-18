@@ -106,6 +106,7 @@ func (c *Client) Shoot(pid int64, out []byte) error {
 		return mmrpcs.ErrDisconnect
 	}
 	pack := c.codec.encode(pid, 0, RpcRaw, out)
+	defer pack.Return()
 	return c.conn.Write(pack)
 }
 
@@ -158,7 +159,6 @@ func (c *Client) input(v any) error {
 
 func (c *Client) loopInput() {
 	defer func() {
-		//TODO: 有没有DeadLock 风险？
 		c.pending.RangeAll(func(id uint32) {
 			call, ok := c.pending.Pop(id)
 			if ok {
