@@ -3,6 +3,7 @@ package transport
 import (
 	"github.com/orbit-w/golib/bases/misc/number_utils"
 	"github.com/orbit-w/golib/bases/packet"
+	"github.com/orbit-w/golib/bases/wrappers/sender_wrapper"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 	"sync"
 )
@@ -20,13 +21,13 @@ type ControlBuffer struct {
 	length          int
 	buffer          packet.IPacket
 	mu              sync.Mutex
-	sw              *SenderWrapper
+	sw              *sender_wrapper.SenderWrapper
 
 	ch    chan struct{}
 	close chan struct{}
 }
 
-func NewControlBuffer(max uint32, _sw *SenderWrapper) *ControlBuffer {
+func NewControlBuffer(max uint32, _sw *sender_wrapper.SenderWrapper) *ControlBuffer {
 	ins := &ControlBuffer{
 		state:           TypeWorking,
 		consumerWaiting: false,
@@ -49,7 +50,7 @@ func BuildControlBuffer(buf *ControlBuffer, max uint32) {
 	buf.mu = sync.Mutex{}
 }
 
-func (ins *ControlBuffer) Run(_sw *SenderWrapper) {
+func (ins *ControlBuffer) Run(_sw *sender_wrapper.SenderWrapper) {
 	ins.mu.Lock()
 	if ins.state == TypeStopped {
 		ins.mu.Unlock()

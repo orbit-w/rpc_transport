@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/orbit-w/golib/bases/misc/number_utils"
 	"github.com/orbit-w/golib/bases/packet"
+	"github.com/orbit-w/golib/bases/wrappers/sender_wrapper"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 	"go.uber.org/atomic"
 	"io"
@@ -36,7 +37,7 @@ type TcpClient struct {
 
 	conn    net.Conn
 	buf     *ControlBuffer
-	sw      *SenderWrapper
+	sw      *sender_wrapper.SenderWrapper
 	r       *receiver
 	dHandle func(remoteNodeId string)
 }
@@ -115,7 +116,7 @@ func (tc *TcpClient) handleDial(_ *DialOption) {
 
 	tc.state.Store(StatusConnected)
 	tc.lastAck.Store(0)
-	tc.sw = NewSender(tc.SendData)
+	tc.sw = sender_wrapper.NewSender(tc.SendData)
 	tc.buf.Run(tc.sw)
 	go tc.keepalive()
 	<-tc.ctx.Done()

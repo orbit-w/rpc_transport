@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/orbit-w/golib/bases/packet"
+	"github.com/orbit-w/golib/bases/wrappers/sender_wrapper"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 	"io"
 	"log"
@@ -25,7 +26,7 @@ type TcpServer struct {
 	msgCodec *Codec
 	ctx      context.Context
 	cancel   context.CancelFunc
-	sw       *SenderWrapper
+	sw       *sender_wrapper.SenderWrapper
 	buf      *ControlBuffer
 	r        *receiver
 }
@@ -43,7 +44,7 @@ func NewServerConn(ctx context.Context, _conn net.Conn, ops *ConnOption) IServer
 		r:      newReceiver(),
 	}
 
-	sw := NewSender(ts.SendData)
+	sw := sender_wrapper.NewSender(ts.SendData)
 	ts.sw = sw
 	ts.buf = NewControlBuffer(ops.MaxIncomingPacket, ts.sw)
 
