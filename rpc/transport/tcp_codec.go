@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"github.com/orbit-w/golib/bases/packet"
 	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
-	"github.com/orbit-w/orbit-net/core/stream_transport/transport_err"
 	"io"
 	"log"
 	"net"
@@ -87,7 +86,7 @@ func (tcd *TcpCodec) buildPacket(buf, data packet.IPacket, gzipped bool) {
 
 func (tcd *TcpCodec) checkPacketSize(header []byte) error {
 	if size := binary.BigEndian.Uint32(header); size > tcd.maxIncomingSize {
-		return transport_err.ExceedMaxIncomingPacket(size)
+		return mmrpcs.ExceedMaxIncomingPacket(size)
 	}
 	return nil
 }
