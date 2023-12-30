@@ -1,8 +1,8 @@
 package rpc
 
 import (
+	"github.com/orbit-w/golib/modules/transport"
 	"github.com/orbit-w/mmrpc/rpc/callb"
-	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 	"log"
 	"sync"
 	"time"
@@ -32,7 +32,7 @@ func (p *Pending) Init(cli *Client, _timeout time.Duration) {
 		if err := p.cli.input(timeoutListMsg{
 			ids: ids,
 		}); err != nil {
-			if !mmrpcs.IsCancelError(err) {
+			if !transport.IsCancelError(err) {
 				log.Println("[Pending] [Init] handle send timeoutListMsg failed")
 			}
 		}

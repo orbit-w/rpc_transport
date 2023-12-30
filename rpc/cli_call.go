@@ -3,13 +3,13 @@ package rpc
 import (
 	"context"
 	"errors"
+	"github.com/orbit-w/golib/modules/transport"
 	"github.com/orbit-w/mmrpc/rpc/callb"
-	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 )
 
 func (c *Client) Call(ctx context.Context, pid int64, out []byte) ([]byte, error) {
 	if c.state.Load() == TypeStopped {
-		return nil, mmrpcs.ErrDisconnect
+		return nil, ErrDisconnect
 	}
 	seq := c.seq.Add(1)
 	call := callb.NewCall(seq)
@@ -29,10 +29,10 @@ func (c *Client) Call(ctx context.Context, pid int64, out []byte) ([]byte, error
 		reply.Return()
 		if err != nil {
 			switch {
-			case mmrpcs.IsCancelError(err):
-				return data, mmrpcs.ErrCanceled
+			case transport.IsCancelError(err):
+				return data, err
 			default:
-				return data, mmrpcs.NewRpcError(err)
+				return data, NewRpcError(err)
 			}
 		}
 		return data, err
@@ -42,12 +42,10 @@ func (c *Client) Call(ctx context.Context, pid int64, out []byte) ([]byte, error
 		}
 		err := ctx.Err()
 		switch {
-		case errors.Is(err, context.DeadlineExceeded):
-			return nil, mmrpcs.ErrDeadlineExceeded
-		case errors.Is(err, context.Canceled):
-			return nil, mmrpcs.ErrCanceled
+		case errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled):
+			return nil, err
 		default:
-			return nil, mmrpcs.NewRpcError(err)
+			return nil, NewRpcError(err)
 		}
 	}
 }

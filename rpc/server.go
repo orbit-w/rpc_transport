@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"github.com/orbit-w/mmrpc/rpc/transport"
+	"github.com/orbit-w/golib/modules/transport"
 	"net"
 )
 

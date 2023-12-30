@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/huandu/skiplist v1.2.0
-	github.com/orbit-w/golib v1.0.10-0.20231230141816-d86b03ff3e9d
+	github.com/orbit-w/golib v1.0.10
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/atomic v1.11.0
 )

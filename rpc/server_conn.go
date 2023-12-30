@@ -3,8 +3,7 @@ package rpc
 import (
 	"errors"
 	"github.com/orbit-w/golib/bases/packet"
-	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
-	"github.com/orbit-w/mmrpc/rpc/transport"
+	"github.com/orbit-w/golib/modules/transport"
 	"io"
 	"log"
 	"runtime/debug"
@@ -43,7 +42,7 @@ func (c *Conn) reader() {
 		in, err := c.conn.Recv()
 		if err != nil {
 			switch {
-			case mmrpcs.IsCancelError(err):
+			case transport.IsCancelError(err):
 			case errors.Is(err, io.EOF):
 			default:
 				log.Println("conn read failed: ", err.Error())

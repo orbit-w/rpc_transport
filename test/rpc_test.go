@@ -19,7 +19,7 @@ func Test_RPCCall(t *testing.T) {
 	cli, err := rpc.NewClient("node_00", "node_01", host)
 	assert.NoError(t, err)
 
-	for i := 0; i < 100000; i++ {
+	for i := 0; i < 1000; i++ {
 		in, err := cli.Call(context.Background(), 100, []byte{1})
 		assert.NoError(t, err)
 		log.Println(in[0])

@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/orbit-w/golib/bases/packet"
+	"github.com/orbit-w/golib/modules/transport"
 	"github.com/orbit-w/golib/modules/unbounded"
-	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
-	"github.com/orbit-w/mmrpc/rpc/transport"
 	"io"
 	"log"
 	"runtime/debug"
@@ -86,7 +85,7 @@ func NewClient(id, remoteId, remoteAddr string) (IClient, error) {
 	cli.pending.Init(cli, cli.timeout)
 	if !cli.state.CompareAndSwap(TypeNone, TypeRunning) {
 		_ = cli.conn.Close()
-		return nil, mmrpcs.ErrDisconnect
+		return nil, ErrDisconnect
 	}
 	go cli.loopInput()
 	go cli.reader()
@@ -103,7 +102,7 @@ func (c *Client) Close() {
 
 func (c *Client) Shoot(pid int64, out []byte) error {
 	if c.state.Load() == TypeStopped {
-		return mmrpcs.ErrDisconnect
+		return ErrDisconnect
 	}
 	pack := c.codec.encode(pid, 0, RpcRaw, out)
 	defer pack.Return()
@@ -119,7 +118,7 @@ func (c *Client) reader() {
 	defer func() {
 		if err != nil {
 			switch {
-			case mmrpcs.IsCancelError(err):
+			case transport.IsCancelError(err):
 			case errors.Is(err, io.EOF):
 			default:
 				log.Println("read failed: ", err.Error())
@@ -145,7 +144,7 @@ func (c *Client) reader() {
 		_ = decoder.Decode(in)
 
 		if err = c.ch.Send(decoder); err != nil {
-			if !mmrpcs.IsCancelError(err) {
+			if !transport.IsCancelError(err) {
 				log.Println("[Client] [reader] [zq.Write] send in failed")
 			}
 		}
@@ -164,10 +163,10 @@ func (c *Client) loopInput() {
 			if ok {
 				switch {
 				case call.IsAsyncInvoker():
-					_ = call.Invoke([]byte{}, mmrpcs.ErrDisconnect)
+					_ = call.Invoke([]byte{}, ErrDisconnect)
 					call.Return()
 				default:
-					call.Reply([]byte{}, mmrpcs.ErrDisconnect)
+					call.Reply([]byte{}, ErrDisconnect)
 				}
 			}
 		})
@@ -207,7 +206,7 @@ func (c *Client) handleMessage(in any) {
 			id := reply.ids[i]
 			req, ok := c.pending.Pop(id)
 			if ok && req.IsAsyncInvoker() {
-				_ = req.Invoke([]byte{}, mmrpcs.ErrTimeout)
+				_ = req.Invoke([]byte{}, ErrTimeout)
 				req.Return()
 			}
 		}

@@ -9,8 +9,8 @@ github.com/huandu/skiplist v1.2.0/go.mod h1:7v3iFjLcSAzO4fN5B8dvebvo/qsfumiLiDXM
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
 github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
-github.com/orbit-w/golib v1.0.10-0.20231230141816-d86b03ff3e9d h1:7cwaDMYJIeGACpY231Fc1gVa9o0bDLI0QfLy55zzc10=
-github.com/orbit-w/golib v1.0.10-0.20231230141816-d86b03ff3e9d/go.mod h1:E1qEV/1n1SbaAoGh+GHXn5EF0gnm+3cwM4kh0bs1xZs=
+github.com/orbit-w/golib v1.0.10 h1:MuE+GGh8zK+kd5F9cnpJKlOh8Ml7AJMaUgl/lXfSCDg=
+github.com/orbit-w/golib v1.0.10/go.mod h1:E1qEV/1n1SbaAoGh+GHXn5EF0gnm+3cwM4kh0bs1xZs=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rogpeppe/go-internal v1.12.0 h1:exVL4IDcn6na9z1rAb56Vxr+CgyK3nn3O+epU5NdKM8=

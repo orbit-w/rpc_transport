@@ -1,7 +1,5 @@
 package callb
 
-import "github.com/orbit-w/mmrpc/rpc/mmrpcs"
-
 type ICall interface {
 	Id() uint32
 	Return()
@@ -81,7 +79,7 @@ type Reply struct {
 }
 
 func (r *Reply) In() ([]byte, error) {
-	return r.in, mmrpcs.NewRpcError(r.err)
+	return r.in, r.err
 }
 
 func (r *Reply) Return() {

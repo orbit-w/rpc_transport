@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"github.com/orbit-w/mmrpc/rpc/callb"
-	"github.com/orbit-w/mmrpc/rpc/mmrpcs"
 )
 
 var (
@@ -19,7 +18,7 @@ func SetInvokeCB(cb func(ctx any, in []byte, err error) error) {
 
 func (c *Client) AsyncCall(pid int64, out []byte, ctx any) error {
 	if c.state.Load() == TypeStopped {
-		return mmrpcs.ErrDisconnect
+		return ErrDisconnect
 	}
 	seq := c.seq.Add(1)
 	req := callb.NewCallWithInvoker(seq, NewAsyncInvoker(ctx, nil))
@@ -36,7 +35,7 @@ func (c *Client) AsyncCall(pid int64, out []byte, ctx any) error {
 
 func (c *Client) AsyncCallC(pid int64, out []byte, ctx any, cb func(ctx any, in []byte, err error) error) error {
 	if c.state.Load() == TypeStopped {
-		return mmrpcs.ErrDisconnect
+		return ErrDisconnect
 	}
 	seq := c.seq.Add(1)
 	req := callb.NewCallWithInvoker(seq, NewAsyncInvoker(ctx, cb))
