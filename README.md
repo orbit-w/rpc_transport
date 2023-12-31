@@ -14,17 +14,17 @@ goos: darwin
 goarch: arm64
 pkg: github.com/orbit-w/mmrpc/test
 Benchmark_Call
-Benchmark_Call-8                    	   42051	     27242 ns/op
+Benchmark_Call-8                    	   42439	     27612 ns/op
 Benchmark_Call_Concurrency
-Benchmark_Call_Concurrency-8        	  244790	      4985 ns/op
+Benchmark_Call_Concurrency-8        	  241162	      4845 ns/op
 Benchmark_Shoot
-Benchmark_Shoot-8                   	12651248	        94.77 ns/op
+Benchmark_Shoot-8                   	13168856	        93.06 ns/op
 Benchmark_Shoot_Concurrency
-Benchmark_Shoot_Concurrency-8       	 5256571	       240.8 ns/op
+Benchmark_Shoot_Concurrency-8       	 5094604	       221.7 ns/op
 Benchmark_AsyncCall
-Benchmark_AsyncCall-8               	 1066633	       988.8 ns/op
+Benchmark_AsyncCall-8               	 1255777	       821.6 ns/op
 Benchmark_AsyncCall_Concurrency
-Benchmark_AsyncCall_Concurrency-8   	 1000000	      1211 ns/op
+Benchmark_AsyncCall_Concurrency-8   	 1292875	       986.3 ns/op
 PASS
 ok  	github.com/orbit-w/mmrpc/test	9.350s
 

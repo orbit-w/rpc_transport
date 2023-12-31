@@ -3,10 +3,8 @@ module github.com/orbit-w/mmrpc
 go 1.20
 
 require (
-	github.com/huandu/skiplist v1.2.0
 	github.com/orbit-w/golib v1.0.10
 	github.com/stretchr/testify v1.8.4
-	go.uber.org/atomic v1.11.0
 )
 
 require (
