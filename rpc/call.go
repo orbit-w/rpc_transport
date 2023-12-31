@@ -1,4 +1,4 @@
-package callb
+package rpc
 
 type ICall interface {
 	Id() uint32
@@ -7,10 +7,6 @@ type ICall interface {
 	IsAsyncInvoker() bool
 	Invoke(in []byte, err error) error
 	Done() <-chan IReply
-}
-
-type IAsyncInvoker interface {
-	Invoke(in []byte, err error) error
 }
 
 type Call struct {

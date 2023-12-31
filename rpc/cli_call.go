@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/orbit-w/golib/modules/transport"
-	"github.com/orbit-w/mmrpc/rpc/callb"
 )
 
 func (c *Client) Call(ctx context.Context, pid int64, out []byte) ([]byte, error) {
@@ -12,7 +11,7 @@ func (c *Client) Call(ctx context.Context, pid int64, out []byte) ([]byte, error
 		return nil, ErrDisconnect
 	}
 	seq := c.seq.Add(1)
-	call := callb.NewCall(seq)
+	call := NewCall(seq)
 
 	c.pending.Push(call)
 	pack := c.codec.encode(pid, seq, RpcCall, out)

@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"github.com/orbit-w/golib/modules/transport"
-	"github.com/orbit-w/mmrpc/rpc/callb"
 	"log"
 	"sync"
 	"time"
@@ -28,7 +27,7 @@ type Pending struct {
 func (p *Pending) Init(cli *Client, _timeout time.Duration) {
 	p.timeout = _timeout
 	p.cli = cli
-	p.to = NewTimeoutMgr(_timeout, func(ids []uint32) {
+	p.to = NewTimeoutMgr(func(ids []uint32) {
 		if err := p.cli.input(timeoutListMsg{
 			ids: ids,
 		}); err != nil {
@@ -39,24 +38,24 @@ func (p *Pending) Init(cli *Client, _timeout time.Duration) {
 	})
 }
 
-func (p *Pending) Push(call callb.ICall) {
+func (p *Pending) Push(call ICall) {
 	id := call.Id()
 	bucket := id % BucketNum
 	p.buckets[bucket].Store(id, call)
 	if call.IsAsyncInvoker() {
-		p.to.Push(call.Id())
+		p.to.Push(call.Id(), p.timeout)
 	}
 	return
 }
 
-func (p *Pending) Pop(id uint32) (callb.ICall, bool) {
+func (p *Pending) Pop(id uint32) (ICall, bool) {
 	bucket := id % BucketNum
 	v, exist := p.buckets[bucket].LoadAndDelete(id)
-	var call callb.ICall
+	var call ICall
 	if exist {
-		call = v.(callb.ICall)
+		call = v.(ICall)
 		if call.IsAsyncInvoker() {
-			p.to.Pop(id)
+			p.to.Remove(id)
 		}
 	}
 	return call, exist

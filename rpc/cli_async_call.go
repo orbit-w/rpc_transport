@@ -1,9 +1,5 @@
 package rpc
 
-import (
-	"github.com/orbit-w/mmrpc/rpc/callb"
-)
-
 var (
 	invokeCB       func(ctx any, in []byte, err error) error
 	defineInvokeCB = func(ctx any, in []byte, err error) error {
@@ -21,7 +17,7 @@ func (c *Client) AsyncCall(pid int64, out []byte, ctx any) error {
 		return ErrDisconnect
 	}
 	seq := c.seq.Add(1)
-	req := callb.NewCallWithInvoker(seq, NewAsyncInvoker(ctx, nil))
+	req := NewCallWithInvoker(seq, NewAsyncInvoker(ctx, nil))
 	c.pending.Push(req)
 	pack := c.codec.encode(pid, seq, RpcAsyncCall, out)
 	defer pack.Return()
@@ -38,7 +34,7 @@ func (c *Client) AsyncCallC(pid int64, out []byte, ctx any, cb func(ctx any, in 
 		return ErrDisconnect
 	}
 	seq := c.seq.Add(1)
-	req := callb.NewCallWithInvoker(seq, NewAsyncInvoker(ctx, cb))
+	req := NewCallWithInvoker(seq, NewAsyncInvoker(ctx, cb))
 	c.pending.Push(req)
 	pack := c.codec.encode(pid, seq, RpcAsyncCall, out)
 	defer pack.Return()
