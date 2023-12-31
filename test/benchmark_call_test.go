@@ -18,7 +18,7 @@ var (
 
 func Benchmark_Call(b *testing.B) {
 	StartServe(b, nil)
-	cli, err := rpc.NewClient("node_00", "node_01", host)
+	cli, err := rpc.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
 	ctx := context.Background()
 	pid := int64(100)
@@ -35,7 +35,7 @@ func Benchmark_Call(b *testing.B) {
 
 func Benchmark_Call_Concurrency(b *testing.B) {
 	StartServe(b, nil)
-	cli, err := rpc.NewClient("node_00", "node_01", host)
+	cli, err := rpc.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
 	ctx := context.Background()
 	pid := int64(100)
@@ -52,7 +52,7 @@ func Benchmark_Call_Concurrency(b *testing.B) {
 
 func Benchmark_Shoot(b *testing.B) {
 	StartServe(b, nil)
-	cli, err := rpc.NewClient("node_00", "node_01", host)
+	cli, err := rpc.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
 	msg := []byte{2}
 	pid := int64(100)
@@ -68,7 +68,7 @@ func Benchmark_Shoot(b *testing.B) {
 
 func Benchmark_Shoot_Concurrency(b *testing.B) {
 	StartServe(b, nil)
-	cli, err := rpc.NewClient("node_00", "node_01", host)
+	cli, err := rpc.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
 	msg := []byte{2}
 	pid := int64(100)
@@ -90,7 +90,7 @@ func Benchmark_AsyncCall(b *testing.B) {
 	rpc.SetInvokeCB(func(ctx any, in []byte, err error) error {
 		return nil
 	})
-	cli, err := rpc.NewClient("node_00", "node_01", host)
+	cli, err := rpc.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
 	pid := int64(100)
 	msg := []byte{2}
@@ -105,7 +105,7 @@ func Benchmark_AsyncCall(b *testing.B) {
 
 func Benchmark_AsyncCall_Concurrency(b *testing.B) {
 	StartServe(b, nil)
-	cli, err := rpc.NewClient("node_00", "node_01", host)
+	cli, err := rpc.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
 	rpc.SetInvokeCB(func(ctx any, in []byte, err error) error {
 		return nil

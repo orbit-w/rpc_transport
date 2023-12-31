@@ -16,7 +16,7 @@ func Test_RPCCall(t *testing.T) {
 	err := rpc.Serve(host, nil)
 	assert.NoError(t, err)
 
-	cli, err := rpc.NewClient("node_00", "node_01", host)
+	cli, err := rpc.Dial("node_00", "node_01", host)
 	assert.NoError(t, err)
 
 	for i := 0; i < 1000; i++ {
@@ -32,7 +32,7 @@ func TestAsyncCall(t *testing.T) {
 	err := rpc.Serve("127.0.0.1:6800", nil)
 	assert.NoError(t, err)
 
-	cli, err := rpc.NewClient("node_00", "node_01", "127.0.0.1:6800")
+	cli, err := rpc.Dial("node_00", "node_01", "127.0.0.1:6800")
 	assert.NoError(t, err)
 
 	pid := int64(100)
@@ -52,7 +52,7 @@ func TestBenchAsyncCall(t *testing.T) {
 	assert.NoError(t, err)
 	pid := int64(100)
 	msg := []byte{3}
-	cli, err := rpc.NewClient("node_00", "node_01", "127.0.0.1:6800")
+	cli, err := rpc.Dial("node_00", "node_01", "127.0.0.1:6800")
 	assert.NoError(t, err)
 	for i := 0; i < 100000; i++ {
 		if err := cli.AsyncCall(pid, msg, pid); err != nil {
@@ -75,7 +75,7 @@ func TestAsyncCallTimeout(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	cli, err := rpc.NewClient("node_00", "node_01", "127.0.0.1:6800")
+	cli, err := rpc.Dial("node_00", "node_01", "127.0.0.1:6800")
 	assert.NoError(t, err)
 
 	pid := int64(100)

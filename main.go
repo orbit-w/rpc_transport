@@ -14,7 +14,7 @@ import (
 
 func Client() {
 	host := "127.0.0.1:6900"
-	cli, err := rpc.NewClient("node_00", "node_01", host)
+	cli, err := rpc.Dial("node_00", "node_01", host)
 	if err != nil {
 		panic(err.Error())
 	}

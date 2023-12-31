@@ -68,20 +68,21 @@ type Client struct {
 	ch         unbounded.IUnbounded[any]
 }
 
-func NewClient(id, remoteId, remoteAddr string) (IClient, error) {
+type DialOption struct {
+	DisconnectHandler func(nodeId string)
+}
+
+func Dial(id, remoteId, addr string, ops ...*DialOption) (IClient, error) {
 	cli := &Client{
 		id:         id,
-		remoteAddr: remoteAddr,
+		remoteAddr: addr,
 		remoteId:   remoteId,
 		timeout:    RpcTimeout,
 		pending:    new(Pending),
 		ch:         unbounded.New[any](2048),
 	}
 
-	cli.conn = transport.DialWithOps(cli.remoteAddr, &transport.DialOption{
-		CurrentNodeId: id,
-		RemoteNodeId:  remoteId,
-	})
+	cli.conn = transport.DialWithOps(cli.remoteAddr, cli.parseOpToTransportOp(ops...))
 	cli.pending.Init(cli, cli.timeout)
 	if !cli.state.CompareAndSwap(TypeNone, TypeRunning) {
 		_ = cli.conn.Close()
@@ -210,5 +211,18 @@ func (c *Client) handleMessage(in any) {
 				req.Return()
 			}
 		}
+	}
+}
+
+func (c *Client) parseOpToTransportOp(ops ...*DialOption) *transport.DialOption {
+	var dh func(nodeId string)
+	if len(ops) > 0 {
+		op := ops[0]
+		dh = op.DisconnectHandler
+	}
+	return &transport.DialOption{
+		CurrentNodeId:     c.id,
+		RemoteNodeId:      c.remoteId,
+		DisconnectHandler: dh,
 	}
 }
