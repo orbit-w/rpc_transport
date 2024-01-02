@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"github.com/orbit-w/golib/modules/transport"
+	"github.com/orbit-w/golib/core/transport"
 	"log"
 	"sync"
 	"time"

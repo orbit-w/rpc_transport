@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/orbit-w/golib/bases/packet"
-	"github.com/orbit-w/golib/modules/transport"
+	"github.com/orbit-w/golib/core/transport"
 	"github.com/orbit-w/golib/modules/unbounded"
 	"io"
 	"log"

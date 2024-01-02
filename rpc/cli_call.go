@@ -3,7 +3,7 @@ package rpc
 import (
 	"context"
 	"errors"
-	"github.com/orbit-w/golib/modules/transport"
+	"github.com/orbit-w/golib/core/transport"
 )
 
 func (c *Client) Call(ctx context.Context, out []byte) ([]byte, error) {

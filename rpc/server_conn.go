@@ -3,7 +3,7 @@ package rpc
 import (
 	"errors"
 	"github.com/orbit-w/golib/bases/packet"
-	"github.com/orbit-w/golib/modules/transport"
+	"github.com/orbit-w/golib/core/transport"
 	"io"
 	"log"
 	"runtime/debug"

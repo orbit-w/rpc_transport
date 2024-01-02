@@ -3,7 +3,7 @@ module github.com/orbit-w/mmrpc
 go 1.20
 
 require (
-	github.com/orbit-w/golib v1.0.10
+	github.com/orbit-w/golib v1.0.11-0.20240102151628-1230e2269799
 	github.com/stretchr/testify v1.8.4
 )
 
