@@ -1,9 +1,7 @@
 package rpc
 
 import (
-	"bytes"
 	"github.com/orbit-w/golib/bases/packet"
-	"io"
 )
 
 /*
@@ -15,7 +13,7 @@ import (
 // IRequest To avoid IRequest resource leakage,
 // IRequest requires the receiver to call Return() to return it to the pool
 type IRequest interface {
-	NewReader() io.Reader
+	NewReader() packet.IPacket
 	Category() int8
 	Response(out []byte) error
 	IgnoreRsp()
@@ -49,8 +47,8 @@ func NewRequest(session ISession, in packet.IPacket) (IRequest, error) {
 	return req, nil
 }
 
-func (r *Request) NewReader() io.Reader {
-	return bytes.NewReader(r.buf)
+func (r *Request) NewReader() packet.IPacket {
+	return packet.Reader(r.buf)
 }
 
 func (r *Request) Category() int8 {
