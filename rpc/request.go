@@ -14,6 +14,7 @@ import (
 // IRequest requires the receiver to call Return() to return it to the pool
 type IRequest interface {
 	NewReader() packet.IPacket
+	Data() []byte
 	Category() int8
 	Response(out []byte) error
 	IgnoreRsp()
@@ -49,6 +50,10 @@ func NewRequest(session ISession, in packet.IPacket) (IRequest, error) {
 
 func (r *Request) NewReader() packet.IPacket {
 	return packet.Reader(r.buf)
+}
+
+func (r *Request) Data() []byte {
+	return r.buf
 }
 
 func (r *Request) Category() int8 {
