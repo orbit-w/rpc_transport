@@ -30,12 +30,12 @@ import (
 // will return and receive the error 'rpc err: disconnect'
 type IClient interface {
 	//Shoot is a one-way communication, the sender does not pay attention to the receiver's reply
-	Shoot(pid int64, out []byte) error
+	Shoot(out []byte) error
 
 	// Call performs a unary RPC and returns after the response is received
 	// into replyMsg.
 	// Support users to use context to cancel blocking status or perform timeout operations
-	Call(ctx context.Context, pid int64, out []byte) ([]byte, error)
+	Call(ctx context.Context, out []byte) ([]byte, error)
 
 	// AsyncCall Asynchronous Call requires setting up an asynchronous callback in advance.
 	// The callback is handled by a separate goroutine.
@@ -43,11 +43,11 @@ type IClient interface {
 
 	// AsyncCall the safe way to handle asynchronous callbacks is to package the context, replyMsg, and err
 	// into a message task and send it to the working goroutine to process the message linearly
-	AsyncCall(pid int64, out []byte, ctx any) error
+	AsyncCall(out []byte, ctx any) error
 
 	// AsyncCallC the functionality and precautions of AsyncCallC are similar to AsyncCall.
 	// The difference is that AsyncCallC no need to set a global asynchronous callback.
-	AsyncCallC(pid int64, out []byte, ctx any, cb func(ctx any, in []byte, err error) error) error
+	AsyncCallC(out []byte, ctx any, cb func(ctx any, in []byte, err error) error) error
 
 	// Close will close all transport links, causes all subsequent requests to fail,
 	// All Call or asynchronous Call requests in the waiting queue will return and receive the error ErrDisconnect 'rpc err: disconnect'
@@ -101,11 +101,11 @@ func (c *Client) Close() {
 	}
 }
 
-func (c *Client) Shoot(pid int64, out []byte) error {
+func (c *Client) Shoot(out []byte) error {
 	if c.state.Load() == TypeStopped {
 		return ErrDisconnect
 	}
-	pack := c.codec.encode(pid, 0, RpcRaw, out)
+	pack := c.codec.encode(0, RpcRaw, out)
 	defer pack.Return()
 	return c.conn.Write(pack)
 }

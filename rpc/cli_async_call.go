@@ -12,14 +12,14 @@ func SetInvokeCB(cb func(ctx any, in []byte, err error) error) {
 	invokeCB = cb
 }
 
-func (c *Client) AsyncCall(pid int64, out []byte, ctx any) error {
+func (c *Client) AsyncCall(out []byte, ctx any) error {
 	if c.state.Load() == TypeStopped {
 		return ErrDisconnect
 	}
 	seq := c.seq.Add(1)
 	req := NewCallWithInvoker(seq, NewAsyncInvoker(ctx, nil))
 	c.pending.Push(req)
-	pack := c.codec.encode(pid, seq, RpcAsyncCall, out)
+	pack := c.codec.encode(seq, RpcAsyncCall, out)
 	defer pack.Return()
 	if err := c.conn.Write(pack); err != nil {
 		c.pending.Pop(seq)
@@ -29,14 +29,14 @@ func (c *Client) AsyncCall(pid int64, out []byte, ctx any) error {
 	return nil
 }
 
-func (c *Client) AsyncCallC(pid int64, out []byte, ctx any, cb func(ctx any, in []byte, err error) error) error {
+func (c *Client) AsyncCallC(out []byte, ctx any, cb func(ctx any, in []byte, err error) error) error {
 	if c.state.Load() == TypeStopped {
 		return ErrDisconnect
 	}
 	seq := c.seq.Add(1)
 	req := NewCallWithInvoker(seq, NewAsyncInvoker(ctx, cb))
 	c.pending.Push(req)
-	pack := c.codec.encode(pid, seq, RpcAsyncCall, out)
+	pack := c.codec.encode(seq, RpcAsyncCall, out)
 	defer pack.Return()
 	if err := c.conn.Write(pack); err != nil {
 		c.pending.Pop(seq)

@@ -15,7 +15,6 @@ import (
 // IRequest To avoid IRequest resource leakage,
 // IRequest requires the receiver to call Return() to return it to the pool
 type IRequest interface {
-	Pid() int64
 	NewReader() io.Reader
 	Category() int8
 	Response(out []byte) error
@@ -32,7 +31,6 @@ type Request struct {
 	ignoreRsp  bool
 	category   int8 //请求类型： RpcRaw｜RpcCall｜RpcAsyncCall
 	seq        uint32
-	pid        int64
 	buf        []byte
 	session    ISession
 }
@@ -44,7 +42,6 @@ func NewRequest(session ISession, in packet.IPacket) (IRequest, error) {
 		return nil, err
 	}
 	req := reqPool.Get().(*Request)
-	req.pid = d.pid
 	req.seq = d.seq
 	req.category = d.category
 	req.buf = d.buf
@@ -54,10 +51,6 @@ func NewRequest(session ISession, in packet.IPacket) (IRequest, error) {
 
 func (r *Request) NewReader() io.Reader {
 	return bytes.NewReader(r.buf)
-}
-
-func (r *Request) Pid() int64 {
-	return r.pid
 }
 
 func (r *Request) Category() int8 {
@@ -74,14 +67,13 @@ func (r *Request) Response(out []byte) error {
 	}
 
 	r.isResponse = true
-	return r.session.Send(r.pid, r.seq, r.category, out)
+	return r.session.Send(r.seq, r.category, out)
 }
 
 func (r *Request) Return() {
 	r.session = nil
 	r.buf = nil
 	r.seq = 0
-	r.pid = 0
 	r.category = 0
 	r.isResponse = false
 	r.ignoreRsp = false

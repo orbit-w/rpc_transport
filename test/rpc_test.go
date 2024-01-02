@@ -20,7 +20,7 @@ func Test_RPCCall(t *testing.T) {
 	assert.NoError(t, err)
 
 	for i := 0; i < 1000; i++ {
-		in, err := cli.Call(context.Background(), 100, []byte{1})
+		in, err := cli.Call(context.Background(), []byte{1})
 		assert.NoError(t, err)
 		log.Println(in[0])
 	}
@@ -36,7 +36,7 @@ func TestAsyncCall(t *testing.T) {
 	assert.NoError(t, err)
 
 	pid := int64(100)
-	err = cli.AsyncCallC(100, []byte{1}, pid, func(ctx any, in []byte, err error) error {
+	err = cli.AsyncCallC([]byte{1}, pid, func(ctx any, in []byte, err error) error {
 		v := ctx.(int64)
 		log.Println(v)
 		log.Println("err: ", err)
@@ -55,7 +55,7 @@ func TestBenchAsyncCall(t *testing.T) {
 	cli, err := rpc.Dial("node_00", "node_01", "127.0.0.1:6800")
 	assert.NoError(t, err)
 	for i := 0; i < 100000; i++ {
-		if err := cli.AsyncCall(pid, msg, pid); err != nil {
+		if err := cli.AsyncCall(msg, pid); err != nil {
 			t.Error(err.Error())
 		}
 	}
@@ -79,7 +79,7 @@ func TestAsyncCallTimeout(t *testing.T) {
 	assert.NoError(t, err)
 
 	pid := int64(100)
-	err = cli.AsyncCallC(100, []byte{3}, pid, func(ctx any, in []byte, err error) error {
+	err = cli.AsyncCallC([]byte{3}, pid, func(ctx any, in []byte, err error) error {
 		v := ctx.(int64)
 		log.Println(v)
 		log.Println("err: ", err)

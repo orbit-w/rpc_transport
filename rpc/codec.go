@@ -8,9 +8,8 @@ import (
 type Codec struct {
 }
 
-func (c Codec) encode(pid int64, seq uint32, category int8, out []byte) packet.IPacket {
+func (c Codec) encode(seq uint32, category int8, out []byte) packet.IPacket {
 	writer := packet.Writer()
-	writer.WriteInt64(pid)
 	writer.WriteUint32(seq)
 	writer.WriteInt8(category)
 	if len(out) != 0 {
@@ -34,10 +33,6 @@ func NewDecoder() *Decoder {
 func (d *Decoder) Decode(in packet.IPacket) error {
 	defer in.Return()
 	var err error
-	d.pid, err = in.ReadInt64()
-	if err != nil {
-		return fmt.Errorf("decode pid failed: %s", err.Error())
-	}
 	d.seq, err = in.ReadUint32()
 	if err != nil {
 		return fmt.Errorf("decode seq failed: %s", err.Error())

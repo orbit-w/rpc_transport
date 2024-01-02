@@ -6,7 +6,7 @@ import (
 	"github.com/orbit-w/golib/modules/transport"
 )
 
-func (c *Client) Call(ctx context.Context, pid int64, out []byte) ([]byte, error) {
+func (c *Client) Call(ctx context.Context, out []byte) ([]byte, error) {
 	if c.state.Load() == TypeStopped {
 		return nil, ErrDisconnect
 	}
@@ -14,7 +14,7 @@ func (c *Client) Call(ctx context.Context, pid int64, out []byte) ([]byte, error
 	call := NewCall(seq)
 
 	c.pending.Push(call)
-	pack := c.codec.encode(pid, seq, RpcCall, out)
+	pack := c.codec.encode(seq, RpcCall, out)
 	defer pack.Return()
 	if err := c.conn.Write(pack); err != nil {
 		c.pending.Pop(seq)
