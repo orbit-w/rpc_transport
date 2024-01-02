@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"runtime/debug"
 	"testing"
 	"time"
 )
@@ -94,4 +95,15 @@ func StartPProf() {
 	go func() {
 		log.Println(http.ListenAndServe("127.0.0.1:6999", nil))
 	}()
+}
+
+func Test_Panic(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println(r.(string))
+			log.Println("stack: ", string(debug.Stack()))
+		}
+	}()
+
+	panic("invalid pointer")
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/orbit-w/golib/core/transport"
 	"github.com/orbit-w/golib/modules/unbounded"
 	"io"
-	"log"
 	"runtime/debug"
 	"sync/atomic"
 	"time"
@@ -90,6 +89,7 @@ func Dial(id, remoteId, addr string, ops ...*DialOption) (IClient, error) {
 	}
 	go cli.loopInput()
 	go cli.reader()
+	//SugarLogger().Infof("Client dial remote %s successfully", addr)
 	return cli, nil
 }
 
@@ -122,7 +122,7 @@ func (c *Client) reader() {
 			case transport.IsCancelError(err):
 			case errors.Is(err, io.EOF):
 			default:
-				log.Println("read failed: ", err.Error())
+				SugarLogger().Errorf("read failed: %s", err.Error())
 			}
 		}
 
@@ -146,7 +146,7 @@ func (c *Client) reader() {
 
 		if err = c.ch.Send(decoder); err != nil {
 			if !transport.IsCancelError(err) {
-				log.Println("[Client] [reader] [zq.Write] send in failed")
+				Logger().Error("[Client] [reader] [zq.Write] send in failed")
 			}
 		}
 	}
@@ -172,7 +172,7 @@ func (c *Client) loopInput() {
 			}
 		})
 		c.pending.OnClose()
-		log.Println("[Client] disconnect...")
+		Logger().Info("[Client] disconnect...")
 	}()
 
 	c.ch.Receive(func(msg any) bool {
@@ -184,8 +184,8 @@ func (c *Client) loopInput() {
 func (c *Client) handleMessage(in any) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println(r)
-			log.Println("stack: ", string(debug.Stack()))
+			SugarLogger().Error(r.(string))
+			SugarLogger().Errorf("stack: %s", string(debug.Stack()))
 		}
 	}()
 

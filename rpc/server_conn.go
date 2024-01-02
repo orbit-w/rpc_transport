@@ -5,7 +5,6 @@ import (
 	"github.com/orbit-w/golib/bases/packet"
 	"github.com/orbit-w/golib/core/transport"
 	"io"
-	"log"
 	"runtime/debug"
 )
 
@@ -45,7 +44,7 @@ func (c *Conn) reader() {
 			case transport.IsCancelError(err):
 			case errors.Is(err, io.EOF):
 			default:
-				log.Println("conn read failed: ", err.Error())
+				SugarLogger().Error("conn read failed: ", err.Error())
 			}
 			return
 		}
@@ -57,13 +56,13 @@ func (c *Conn) reader() {
 func (c *Conn) handleRequest(in packet.IPacket) {
 	req, err := NewRequest(c, in)
 	if err != nil {
-		log.Println("[ServerConn] [reader] new request failed: ", err.Error())
+		SugarLogger().Error("[ServerConn] [reader] new request failed: ", err.Error())
 		return
 	}
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println(r)
-			log.Println("stack: ", string(debug.Stack()))
+			SugarLogger().Error(r)
+			SugarLogger().Error("stack: ", string(debug.Stack()))
 		}
 	}()
 

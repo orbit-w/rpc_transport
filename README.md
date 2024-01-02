@@ -53,12 +53,12 @@ func InitClient() {
 		panic(err.Error())
 	}
 
-	_, err = cli.Call(context.Background(), 100, []byte{1})
+	_, err = cli.Call(context.Background(), []byte{1})
 	if err != nil {
 		panic(err.Error())
 	}
 	
-	if err = cli.AsyncCallC(100, []byte{3}, 100, func(ctx any, in []byte, err error) error {
+	if err = cli.AsyncCallC([]byte{3}, 100, func(ctx any, in []byte, err error) error {
 		v := ctx.(int64)
 		log.Println(v)
 		log.Println("err: ", err)
