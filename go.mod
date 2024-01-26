@@ -1,4 +1,4 @@
-module github.com/orbit-w/mmrpc
+module github.com/orbit-w/rpc_transport
 
 go 1.20
 
