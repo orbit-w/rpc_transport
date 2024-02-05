@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/orbit-w/mmrpc/rpc"
+	"github.com/orbit-w/rpc_transport/rpc"
 	"log"
 )
 

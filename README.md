@@ -36,7 +36,7 @@ package main
 
 import (
 	"context"
-	"github.com/orbit-w/mmrpc/rpc"
+	"github.com/orbit-w/rpc_transport"
 	"log"
 )
 
@@ -75,7 +75,7 @@ func InitClient() {
 package main
 
 import (
-	"github.com/orbit-w/mmrpc/rpc"
+	"github.com/orbit-w/rpc_transport"
 )
 
 /*

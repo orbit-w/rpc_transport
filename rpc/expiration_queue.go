@@ -19,6 +19,10 @@ type Item[K comparable, V any] struct {
 	expiresAt time.Time
 }
 
+func (i Item[K, V]) Equal(dst *Item[K, V]) bool {
+	return i.key == dst.key
+}
+
 type expirationQueue[K comparable, V any] []*Item[K, V]
 
 func newExpirationQueue[K comparable, V any]() expirationQueue[K, V] {
@@ -27,29 +31,29 @@ func newExpirationQueue[K comparable, V any]() expirationQueue[K, V] {
 	return q
 }
 
-// isEmpty checks if the queue is empty.
-func (q expirationQueue[K, V]) isEmpty() bool {
+// IsEmpty checks if the queue is empty.
+func (q expirationQueue[K, V]) IsEmpty() bool {
 	return q.Len() == 0
 }
 
-// update updates an existing item's value and position in the queue.
-func (q *expirationQueue[K, V]) update(item *Item[K, V]) {
+// Update updates an existing item's value and position in the queue.
+func (q *expirationQueue[K, V]) Update(item *Item[K, V]) {
 	heap.Fix(q, item.index)
 }
 
-// push pushes a new item into the queue and updates the order of its
+// Enqueue pushes a new item into the queue and updates the order of its
 // elements.
-func (q *expirationQueue[K, V]) push(item *Item[K, V]) {
+func (q *expirationQueue[K, V]) Enqueue(item *Item[K, V]) {
 	heap.Push(q, item)
 }
 
-// remove removes an item from the queue and updates the order of its
+// Remove removes an item from the queue and updates the order of its
 // elements.
-func (q *expirationQueue[K, V]) remove(item *Item[K, V]) {
+func (q *expirationQueue[K, V]) Remove(item *Item[K, V]) {
 	heap.Remove(q, item.index)
 }
 
-func (q *expirationQueue[K, V]) pop() *Item[K, V] {
+func (q *expirationQueue[K, V]) Dequeue() *Item[K, V] {
 	v := heap.Pop(q)
 	if v == nil {
 		return nil
@@ -57,7 +61,7 @@ func (q *expirationQueue[K, V]) pop() *Item[K, V] {
 	return v.(*Item[K, V])
 }
 
-func (q *expirationQueue[K, V]) peek() *Item[K, V] {
+func (q *expirationQueue[K, V]) Peek() *Item[K, V] {
 	if q.Len() > 0 {
 		return (*q)[0]
 	} else {

@@ -2,7 +2,7 @@ package test
 
 import (
 	"context"
-	"github.com/orbit-w/mmrpc/rpc"
+	"github.com/orbit-w/rpc_transport/rpc"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log"

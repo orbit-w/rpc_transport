@@ -23,7 +23,7 @@ type Timeout struct {
 	callback func([]uint32)
 }
 
-func NewTimeoutMgr(cb func([]uint32)) *Timeout {
+func NewTimeout(cb func([]uint32)) *Timeout {
 	t := &Timeout{
 		max:      MaxCheck,
 		itemsMap: make(map[uint32]*Item[uint32, bool], 0),
@@ -43,7 +43,7 @@ func (t *Timeout) Push(id uint32, ttl time.Duration) {
 	if ok {
 		item.ttl = ttl
 		item.expiresAt = time.Now().Add(item.ttl)
-		t.queue.update(item)
+		t.queue.Update(item)
 		return
 	}
 
@@ -53,7 +53,7 @@ func (t *Timeout) Push(id uint32, ttl time.Duration) {
 		expiresAt: time.Now().Add(ttl),
 	}
 	t.itemsMap[id] = item
-	t.queue.push(item)
+	t.queue.Enqueue(item)
 }
 
 func (t *Timeout) Remove(id uint32) {
@@ -62,7 +62,7 @@ func (t *Timeout) Remove(id uint32) {
 	item, ok := t.get(id)
 	if ok {
 		delete(t.itemsMap, id)
-		t.queue.remove(item)
+		t.queue.Remove(item)
 	}
 }
 
@@ -90,7 +90,7 @@ func (t *Timeout) check() {
 	var num uint32
 	t.mu.Lock()
 	for {
-		if t.queue.isEmpty() {
+		if t.queue.IsEmpty() {
 			break
 		}
 		front := t.queue[0]
@@ -98,7 +98,7 @@ func (t *Timeout) check() {
 			break
 		}
 		delete(t.itemsMap, front.key)
-		t.queue.remove(front)
+		t.queue.Dequeue()
 		ids = append(ids, front.key)
 		num++
 	}

@@ -26,7 +26,7 @@ type Pending struct {
 func (p *Pending) Init(cli *Client, _timeout time.Duration) {
 	p.timeout = _timeout
 	p.cli = cli
-	p.to = NewTimeoutMgr(func(ids []uint32) {
+	p.to = NewTimeout(func(ids []uint32) {
 		if err := p.cli.input(timeoutListMsg{
 			ids: ids,
 		}); err != nil {
