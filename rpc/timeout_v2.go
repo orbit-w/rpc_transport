@@ -7,14 +7,13 @@ import (
 )
 
 type TimeoutMgr struct {
-	max       uint32
-	state     atomic.Uint32
-	mu        sync.Mutex
-	timer     *time.Timer
-	itemsMap  map[uint32]*Item[uint32, bool]
-	queue     expirationQueue[uint32, bool]
-	callback  func([]uint32)
-	scheduler *Item[uint32, bool]
+	max      uint32
+	state    atomic.Uint32
+	mu       sync.Mutex
+	timer    *time.Timer
+	itemsMap map[uint32]*Item[uint32, bool]
+	queue    expirationQueue[uint32, bool]
+	callback func([]uint32)
 }
 
 func NewTimeoutMgr(cb func([]uint32)) *TimeoutMgr {
@@ -48,9 +47,10 @@ func (t *TimeoutMgr) Remove(id uint32) {
 	defer t.mu.Unlock()
 	item, ok := t.get(id)
 	if ok {
+		head := t.queue.Peek()
 		delete(t.itemsMap, id)
 		t.queue.Remove(item)
-		if t.scheduler.Equal(item) {
+		if item.Equal(head) {
 			t.schedule()
 		}
 	}
@@ -67,24 +67,21 @@ func (t *TimeoutMgr) insert(id uint32, ttl time.Duration) {
 		ttl:       ttl,
 		expiresAt: time.Now().Add(ttl),
 	}
+
+	head := t.queue.Peek()
 	t.itemsMap[id] = item
 	t.queue.Enqueue(item)
-	if t.scheduler == nil || t.scheduler.expiresAt.After(item.expiresAt) {
+	if head == nil || !t.queue.Peek().Equal(head) {
 		t.schedule()
-		return
 	}
 }
 
 func (t *TimeoutMgr) update(dst *Item[uint32, bool], ttl time.Duration) {
 	dst.ttl = ttl
 	dst.expiresAt = time.Now().Add(dst.ttl)
+	head := t.queue.Peek()
 	t.queue.Update(dst)
-
-	if t.scheduler == nil {
-		panic("update scheduler invalid")
-	}
-
-	if t.scheduler.Equal(dst) || t.scheduler.expiresAt.After(dst.expiresAt) {
+	if nh := t.queue.Peek(); !nh.Equal(head) || nh.Equal(dst) {
 		t.schedule()
 	}
 }
@@ -100,7 +97,6 @@ func (t *TimeoutMgr) schedule() {
 	}
 
 	if t.queue.IsEmpty() {
-		t.scheduler = nil
 		return
 	}
 
@@ -108,7 +104,6 @@ func (t *TimeoutMgr) schedule() {
 	if t.timer != nil {
 		t.timer.Stop()
 	}
-	t.scheduler = head
 	t.timer = time.AfterFunc(time.Until(head.expiresAt), func() {
 		t.check()
 	})
