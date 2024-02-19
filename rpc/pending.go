@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"github.com/orbit-w/golib/core/transport"
+	"github.com/orbit-w/rpc_transport/timeout"
 	"sync"
 	"time"
 )
@@ -20,13 +21,13 @@ type Pending struct {
 	timeout time.Duration
 	buckets [BucketNum]sync.Map
 	cli     *Client
-	to      *Timeout
+	to      *timeout.Timeout
 }
 
 func (p *Pending) Init(cli *Client, _timeout time.Duration) {
 	p.timeout = _timeout
 	p.cli = cli
-	p.to = NewTimeout(func(ids []uint32) {
+	p.to = timeout.NewTimeout(func(ids []uint32) {
 		if err := p.cli.input(timeoutListMsg{
 			ids: ids,
 		}); err != nil {
@@ -38,11 +39,11 @@ func (p *Pending) Init(cli *Client, _timeout time.Duration) {
 }
 
 func (p *Pending) Push(call ICall) {
-	id := call.Id()
+	id := call.Seq()
 	bucket := id % BucketNum
 	p.buckets[bucket].Store(id, call)
 	if call.IsAsyncInvoker() {
-		p.to.Push(call.Id(), p.timeout)
+		p.to.Insert(call.Seq(), p.timeout)
 	}
 	return
 }

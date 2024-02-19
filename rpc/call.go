@@ -1,7 +1,7 @@
 package rpc
 
 type ICall interface {
-	Id() uint32
+	Seq() uint32
 	Return()
 	Reply(in []byte, err error)
 	IsAsyncInvoker() bool
@@ -28,7 +28,7 @@ func NewCallWithInvoker(seq uint32, _invoker IAsyncInvoker) ICall {
 	return r
 }
 
-func (r *Call) Id() uint32 {
+func (r *Call) Seq() uint32 {
 	return r.seq
 }
 
