@@ -1,11 +1,23 @@
-# MM RPC
-MM RPC(Multi-Senders:Multi-Receivers) is a Go RPC(Remote procedure call) library for Golang.
+# Rpc_Transport
+RPC_Transport (Multi-Senders:Multi-Receivers) is a Go RPC(Remote procedure call) transport library for Golang.
+
+RPC_Transport provides an efficient remote network communication module available in RPC mode
 
 Suitable for remote calls between services within the cluster,
 it can also be used for message communication between intranet services
 
 The StreamTransport transport layer relies on TCP underlying connections to provide reliability and ordering
 and to provide stream-oriented multiplexing.
+
+# 中文：
+RPC_Transport 可以为 RPC(Remote procedure call) 提供高效可靠底层远程通信传输链路，可以帮助开发者快速搭建RPC服务。
+底层通信协议支持TCP,依赖TCP底层连接来提供可靠性和排序.
+RPC_Transport 在面对高并发的情况下，性能也很优秀，底层避免多数无用的锁碰撞
+
+支持 Shoot, Call, AsyncCall 三种消息通信模式
+Shoot：单向远程投递消息，不关心回复
+Call：单向远程投递消息，同阻塞式等待接收者的回复
+AsyncCall: 单向远程投递消息，异步等待接收者的回复；当收到回复，系统会自动通知发送者调用回调函数
 
 ## Benchmark
 ```
