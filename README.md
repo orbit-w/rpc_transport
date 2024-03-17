@@ -9,6 +9,7 @@ it can also be used for message communication between intranet services
 The StreamTransport transport layer relies on TCP underlying connections to provide reliability and ordering
 and to provide stream-oriented multiplexing.
 
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/orbit-w/rpc_transport/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/orbit-w/rpc_transport/tree/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/orbit-w/mmrpc)](https://goreportcard.com/report/github.com/orbit-w/mmrpc)
 [![codecov](https://codecov.io/gh/orbit-w/rpc_transport/graph/badge.svg?token=N86ZXD9S1E)](https://codecov.io/gh/orbit-w/rpc_transport)
 
@@ -22,6 +23,7 @@ RPC_Transport 在面对高并发的情况下，性能也很优秀，底层避免
 **Call**：单向远程投递消息，同阻塞式等待接收者的回复
 **AsyncCall**: 单向远程投递消息，异步等待接收者的回复；当收到回复，系统会自动通知发送者调用回调函数
 
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/orbit-w/rpc_transport/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/orbit-w/rpc_transport/tree/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/orbit-w/mmrpc)](https://goreportcard.com/report/github.com/orbit-w/mmrpc)
 [![codecov](https://codecov.io/gh/orbit-w/rpc_transport/graph/badge.svg?token=N86ZXD9S1E)](https://codecov.io/gh/orbit-w/rpc_transport)
 
