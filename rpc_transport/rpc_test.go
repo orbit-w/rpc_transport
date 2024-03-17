@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
-	"net/http"
 	"runtime/debug"
 	"testing"
 	"time"
@@ -88,12 +87,6 @@ func TestAsyncCallTimeout(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	time.Sleep(time.Second * 15)
-}
-
-func StartPProf() {
-	go func() {
-		log.Println(http.ListenAndServe("127.0.0.1:6999", nil))
-	}()
 }
 
 func Test_Panic(t *testing.T) {

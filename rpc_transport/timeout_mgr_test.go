@@ -43,5 +43,5 @@ func TestTimeout_Remove(t *testing.T) {
 	to.Remove(5)
 	to.Remove(6)
 	fmt.Println("complete")
-	time.Sleep(time.Minute * 15)
+	time.Sleep(time.Second * 30)
 }
