@@ -6,16 +6,25 @@ import (
 	"io"
 	"log"
 	"runtime/debug"
+	"sync"
 	"testing"
 	"time"
 )
 
-func Test_RPCCall(t *testing.T) {
-	host := "127.0.0.1:6900"
-	err := Serve(host, nil)
-	assert.NoError(t, err)
+const (
+	local = "127.0.0.1:6800"
+)
 
-	cli, err := Dial("node_00", "node_01", host)
+var (
+	ServeOnce sync.Once
+
+	rpcServer RpcServer
+)
+
+func Test_RPCCall(t *testing.T) {
+	Serve(t)
+
+	cli, err := Dial("node_00", "node_01", local)
 	assert.NoError(t, err)
 
 	for i := 0; i < 1000; i++ {
@@ -28,10 +37,9 @@ func Test_RPCCall(t *testing.T) {
 }
 
 func TestAsyncCall(t *testing.T) {
-	err := Serve("127.0.0.1:6800", nil)
-	assert.NoError(t, err)
+	Serve(t)
 
-	cli, err := Dial("node_00", "node_01", "127.0.0.1:6800")
+	cli, err := Dial("node_00", "node_01", local)
 	assert.NoError(t, err)
 
 	pid := int64(100)
@@ -47,11 +55,11 @@ func TestAsyncCall(t *testing.T) {
 }
 
 func TestBenchAsyncCall(t *testing.T) {
-	err := Serve("127.0.0.1:6800", nil)
-	assert.NoError(t, err)
+	Serve(t)
+
 	pid := int64(100)
 	msg := []byte{3}
-	cli, err := Dial("node_00", "node_01", "127.0.0.1:6800")
+	cli, err := Dial("node_00", "node_01", local)
 	assert.NoError(t, err)
 	for i := 0; i < 100000; i++ {
 		if err := cli.AsyncCall(msg, pid); err != nil {
@@ -62,7 +70,8 @@ func TestBenchAsyncCall(t *testing.T) {
 }
 
 func TestAsyncCallTimeout(t *testing.T) {
-	err := Serve("127.0.0.1:6800", func(req IRequest) error {
+	Serve(t)
+	SetReqHandle(func(req IRequest) error {
 		r := req.NewReader()
 		data, _ := io.ReadAll(r)
 		switch data[0] {
@@ -72,7 +81,6 @@ func TestAsyncCallTimeout(t *testing.T) {
 			return req.Response([]byte{1})
 		}
 	})
-	assert.NoError(t, err)
 
 	cli, err := Dial("node_00", "node_01", "127.0.0.1:6800")
 	assert.NoError(t, err)
@@ -98,4 +106,11 @@ func Test_Panic(t *testing.T) {
 	}()
 
 	panic("invalid pointer")
+}
+
+func Serve(t *testing.T) {
+	ServeOnce.Do(func() {
+		err := rpcServer.Serve(local, nil)
+		assert.NoError(t, err)
+	})
 }

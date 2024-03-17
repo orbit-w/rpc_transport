@@ -5,7 +5,11 @@ import (
 	"net"
 )
 
-func Serve(host string, rh RequestHandle) error {
+type RpcServer struct {
+	ts *transport.Server
+}
+
+func (s *RpcServer) Serve(host string, rh RequestHandle) error {
 	if rh == nil {
 		setTestHandle()
 	} else {
@@ -26,6 +30,14 @@ func Serve(host string, rh RequestHandle) error {
 		NewConn(conn)
 		return nil
 	})
+	s.ts = server
+	return nil
+}
+
+func (s *RpcServer) Stop() error {
+	if s.ts != nil {
+		return s.ts.Stop()
+	}
 	return nil
 }
 
@@ -34,6 +46,10 @@ func Serve(host string, rh RequestHandle) error {
 type RequestHandle func(req IRequest) error
 
 var gRequestHandle RequestHandle
+
+func SetReqHandle(h RequestHandle) {
+	gRequestHandle = h
+}
 
 func setTestHandle() {
 	gRequestHandle = func(req IRequest) error {
