@@ -1,11 +1,11 @@
-package rpc
+package rpc_transport
 
 import (
 	"errors"
 )
 
 var (
-	errPattern    = "rpc err: "
+	errPattern    = "rpc_transport err: "
 	ErrTimeout    = errors.New("timeout")
 	ErrDisconnect = errors.New("disconnect")
 )

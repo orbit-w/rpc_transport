@@ -1,4 +1,4 @@
-package rpc
+package rpc_transport
 
 type ICall interface {
 	Seq() uint32

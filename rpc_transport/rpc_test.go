@@ -1,8 +1,7 @@
-package test
+package rpc_transport
 
 import (
 	"context"
-	"github.com/orbit-w/rpc_transport/rpc"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
@@ -14,10 +13,10 @@ import (
 
 func Test_RPCCall(t *testing.T) {
 	host := "127.0.0.1:6900"
-	err := rpc.Serve(host, nil)
+	err := Serve(host, nil)
 	assert.NoError(t, err)
 
-	cli, err := rpc.Dial("node_00", "node_01", host)
+	cli, err := Dial("node_00", "node_01", host)
 	assert.NoError(t, err)
 
 	for i := 0; i < 1000; i++ {
@@ -30,10 +29,10 @@ func Test_RPCCall(t *testing.T) {
 }
 
 func TestAsyncCall(t *testing.T) {
-	err := rpc.Serve("127.0.0.1:6800", nil)
+	err := Serve("127.0.0.1:6800", nil)
 	assert.NoError(t, err)
 
-	cli, err := rpc.Dial("node_00", "node_01", "127.0.0.1:6800")
+	cli, err := Dial("node_00", "node_01", "127.0.0.1:6800")
 	assert.NoError(t, err)
 
 	pid := int64(100)
@@ -49,11 +48,11 @@ func TestAsyncCall(t *testing.T) {
 }
 
 func TestBenchAsyncCall(t *testing.T) {
-	err := rpc.Serve("127.0.0.1:6800", nil)
+	err := Serve("127.0.0.1:6800", nil)
 	assert.NoError(t, err)
 	pid := int64(100)
 	msg := []byte{3}
-	cli, err := rpc.Dial("node_00", "node_01", "127.0.0.1:6800")
+	cli, err := Dial("node_00", "node_01", "127.0.0.1:6800")
 	assert.NoError(t, err)
 	for i := 0; i < 100000; i++ {
 		if err := cli.AsyncCall(msg, pid); err != nil {
@@ -64,7 +63,7 @@ func TestBenchAsyncCall(t *testing.T) {
 }
 
 func TestAsyncCallTimeout(t *testing.T) {
-	err := rpc.Serve("127.0.0.1:6800", func(req rpc.IRequest) error {
+	err := Serve("127.0.0.1:6800", func(req IRequest) error {
 		r := req.NewReader()
 		data, _ := io.ReadAll(r)
 		switch data[0] {
@@ -76,7 +75,7 @@ func TestAsyncCallTimeout(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	cli, err := rpc.Dial("node_00", "node_01", "127.0.0.1:6800")
+	cli, err := Dial("node_00", "node_01", "127.0.0.1:6800")
 	assert.NoError(t, err)
 
 	pid := int64(100)

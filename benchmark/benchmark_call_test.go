@@ -1,8 +1,8 @@
-package test
+package benchmark
 
 import (
 	"context"
-	"github.com/orbit-w/rpc_transport/rpc"
+	"github.com/orbit-w/rpc_transport/rpc_transport"
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
@@ -18,7 +18,7 @@ var (
 
 func Benchmark_Call(b *testing.B) {
 	StartServe(b, nil)
-	cli, err := rpc.Dial("node_00", "node_01", host)
+	cli, err := rpc_transport.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
 	ctx := context.Background()
 	msg := []byte{2}
@@ -34,7 +34,7 @@ func Benchmark_Call(b *testing.B) {
 
 func Benchmark_Call_Concurrency(b *testing.B) {
 	StartServe(b, nil)
-	cli, err := rpc.Dial("node_00", "node_01", host)
+	cli, err := rpc_transport.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
 	ctx := context.Background()
 	b.StartTimer()
@@ -50,7 +50,7 @@ func Benchmark_Call_Concurrency(b *testing.B) {
 
 func Benchmark_Shoot(b *testing.B) {
 	StartServe(b, nil)
-	cli, err := rpc.Dial("node_00", "node_01", host)
+	cli, err := rpc_transport.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
 	msg := []byte{2}
 	b.ResetTimer()
@@ -65,7 +65,7 @@ func Benchmark_Shoot(b *testing.B) {
 
 func Benchmark_Shoot_Concurrency(b *testing.B) {
 	StartServe(b, nil)
-	cli, err := rpc.Dial("node_00", "node_01", host)
+	cli, err := rpc_transport.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
 	msg := []byte{2}
 	b.ResetTimer()
@@ -83,10 +83,10 @@ func Benchmark_Shoot_Concurrency(b *testing.B) {
 
 func Benchmark_AsyncCall(b *testing.B) {
 	StartServe(b, nil)
-	rpc.SetInvokeCB(func(ctx any, in []byte, err error) error {
+	rpc_transport.SetInvokeCB(func(ctx any, in []byte, err error) error {
 		return nil
 	})
-	cli, err := rpc.Dial("node_00", "node_01", host)
+	cli, err := rpc_transport.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
 	pid := int64(100)
 	msg := []byte{2}
@@ -101,9 +101,9 @@ func Benchmark_AsyncCall(b *testing.B) {
 
 func Benchmark_AsyncCall_Concurrency(b *testing.B) {
 	StartServe(b, nil)
-	cli, err := rpc.Dial("node_00", "node_01", host)
+	cli, err := rpc_transport.Dial("node_00", "node_01", host)
 	assert.NoError(b, err)
-	rpc.SetInvokeCB(func(ctx any, in []byte, err error) error {
+	rpc_transport.SetInvokeCB(func(ctx any, in []byte, err error) error {
 		return nil
 	})
 	msg := []byte{3}
@@ -117,9 +117,9 @@ func Benchmark_AsyncCall_Concurrency(b *testing.B) {
 	})
 }
 
-func StartServe(b *testing.B, rh rpc.RequestHandle) {
+func StartServe(b *testing.B, rh rpc_transport.RequestHandle) {
 	once.Do(func() {
-		err := rpc.Serve(host, rh)
+		err := rpc_transport.Serve(host, rh)
 		assert.NoError(b, err)
 	})
 }

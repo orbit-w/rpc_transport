@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/orbit-w/rpc_transport/rpc"
+	"github.com/orbit-w/rpc_transport/rpc_transport"
 	"log"
 )
 
@@ -14,7 +14,7 @@ import (
 
 func Client() {
 	host := "127.0.0.1:6900"
-	cli, err := rpc.Dial("node_00", "node_01", host)
+	cli, err := rpc_transport.Dial("node_00", "node_01", host)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -37,7 +37,7 @@ func Client() {
 
 func Server() {
 	host := "127.0.0.1:6900"
-	err := rpc.Serve(host, func(req rpc.IRequest) error {
+	err := rpc_transport.Serve(host, func(req rpc_transport.IRequest) error {
 		_ = req.Response([]byte{1})
 		req.Return()
 		return nil

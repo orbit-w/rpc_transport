@@ -1,4 +1,4 @@
-package test
+package rpc_transport
 
 import (
 	"fmt"

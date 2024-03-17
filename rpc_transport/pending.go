@@ -1,4 +1,4 @@
-package rpc
+package rpc_transport
 
 import (
 	"github.com/orbit-w/golib/core/transport"

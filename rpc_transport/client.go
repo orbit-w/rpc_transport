@@ -1,4 +1,4 @@
-package rpc
+package rpc_transport
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 //		3: Shoot
 //
 // When the transport connection is disconnected, all Call or asynchronous Call requests in the waiting queue
-// will return and receive the error 'rpc err: disconnect'
+// will return and receive the error 'rpc_transport err: disconnect'
 type IClient interface {
 	//Shoot is a one-way communication, the sender does not pay attention to the receiver's reply
 	Shoot(out []byte) error
@@ -49,7 +49,7 @@ type IClient interface {
 	AsyncCallC(out []byte, ctx any, cb func(ctx any, in []byte, err error) error) error
 
 	// Close will close all transport links, causes all subsequent requests to fail,
-	// All Call or asynchronous Call requests in the waiting queue will return and receive the error ErrDisconnect 'rpc err: disconnect'
+	// All Call or asynchronous Call requests in the waiting queue will return and receive the error ErrDisconnect 'rpc_transport err: disconnect'
 	// Close can be called repeatedly
 	Close()
 }

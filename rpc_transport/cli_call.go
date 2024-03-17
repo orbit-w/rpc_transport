@@ -1,4 +1,4 @@
-package rpc
+package rpc_transport
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package rpc
+package rpc_transport
 
 var (
 	invokeCB       func(ctx any, in []byte, err error) error
