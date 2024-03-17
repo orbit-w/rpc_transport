@@ -95,12 +95,35 @@ func TestBenchAsyncCall(t *testing.T) {
 	msg := []byte{3}
 	cli, err := Dial("node_00", "node_01", local)
 	assert.NoError(t, err)
+	SetInvokeCB(func(ctx any, in []byte, err error) error {
+		if len(in) > 0 {
+			fmt.Println(in[0])
+		}
+		return nil
+	})
 	for i := 0; i < 100000; i++ {
 		if err := cli.AsyncCall(msg, pid); err != nil {
 			t.Error(err.Error())
 		}
 	}
 	time.Sleep(time.Second * 15)
+}
+
+func TestBenchAsyncCallPanic(t *testing.T) {
+	Serve(t)
+
+	pid := int64(100)
+	msg := []byte{3}
+	cli, err := Dial("node_00", "node_01", local)
+	assert.NoError(t, err)
+	SetInvokeCB(func(ctx any, in []byte, err error) error {
+		panic("test")
+		return nil
+	})
+	if err := cli.AsyncCall(msg, pid); err != nil {
+		t.Error(err.Error())
+	}
+	time.Sleep(time.Second * 5)
 }
 
 func TestAsyncCallTimeout(t *testing.T) {

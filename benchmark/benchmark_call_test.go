@@ -13,7 +13,8 @@ const (
 )
 
 var (
-	once = new(sync.Once)
+	once      = new(sync.Once)
+	rpcServer rpc_transport.RpcServer
 )
 
 func Benchmark_Call(b *testing.B) {
@@ -119,7 +120,7 @@ func Benchmark_AsyncCall_Concurrency(b *testing.B) {
 
 func StartServe(b *testing.B, rh rpc_transport.RequestHandle) {
 	once.Do(func() {
-		err := rpc_transport.Serve(host, rh)
+		err := rpcServer.Serve(host, rh)
 		assert.NoError(b, err)
 	})
 }
