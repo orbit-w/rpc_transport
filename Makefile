@@ -1,2 +1,2 @@
-Benchmark:
-	go test -v -run=^$ -bench ./...
+GoBenchmark:
+	go test ./benchmark/... -v -run=^$ -benchmem -bench=.
