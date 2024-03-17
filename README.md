@@ -10,6 +10,7 @@ The StreamTransport transport layer relies on TCP underlying connections to prov
 and to provide stream-oriented multiplexing.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/orbit-w/mmrpc)](https://goreportcard.com/report/github.com/orbit-w/mmrpc)
+[![codecov](https://codecov.io/gh/orbit-w/rpc_transport/graph/badge.svg?token=N86ZXD9S1E)](https://codecov.io/gh/orbit-w/rpc_transport)
 
 # 中文：
 RPC_Transport 可以为 RPC(Remote procedure call) 提供高效可靠底层远程通信传输链路，可以帮助开发者快速搭建RPC服务。
@@ -22,6 +23,7 @@ RPC_Transport 在面对高并发的情况下，性能也很优秀，底层避免
 **AsyncCall**: 单向远程投递消息，异步等待接收者的回复；当收到回复，系统会自动通知发送者调用回调函数
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/orbit-w/mmrpc)](https://goreportcard.com/report/github.com/orbit-w/mmrpc)
+[![codecov](https://codecov.io/gh/orbit-w/rpc_transport/graph/badge.svg?token=N86ZXD9S1E)](https://codecov.io/gh/orbit-w/rpc_transport)
 
 ## Benchmark
 ```

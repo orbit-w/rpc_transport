@@ -48,14 +48,3 @@ func (c *Client) Call(ctx context.Context, out []byte) ([]byte, error) {
 		}
 	}
 }
-
-func wrapCtx(ctx context.Context) context.Context {
-	if ctx != nil {
-		return ctx
-	}
-	ctx, _ = context.WithTimeout(context.Background(), RpcTimeout)
-	return ctx
-}
-
-type RingBuffer[v any] struct {
-}

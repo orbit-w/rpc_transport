@@ -2,6 +2,7 @@ package rpc_transport
 
 import (
 	"context"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
@@ -33,7 +34,28 @@ func Test_RPCCall(t *testing.T) {
 		log.Println(in[0])
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), RpcTimeout)
+	_, err = cli.Call(ctx, []byte{1})
+	assert.NoError(t, err)
+	cancel()
 	time.Sleep(time.Second * 5)
+}
+
+func Test_RPCCallWithCancel(t *testing.T) {
+	Serve(t)
+
+	cli, err := Dial("node_00", "node_01", local)
+	assert.NoError(t, err)
+	ctx, cancel := context.WithTimeout(context.Background(), RpcTimeout)
+	go func() {
+		_, err = cli.Call(ctx, []byte{1})
+		fmt.Println("complete")
+	}()
+	assert.NoError(t, err)
+	cancel()
+	fmt.Println("cancel")
+	time.Sleep(time.Second * 2)
+	assert.NoError(t, rpcServer.Stop())
 }
 
 func TestAsyncCall(t *testing.T) {
@@ -112,5 +134,12 @@ func Serve(t *testing.T) {
 	ServeOnce.Do(func() {
 		err := rpcServer.Serve(local, nil)
 		assert.NoError(t, err)
+	})
+}
+
+func Test_Misc(t *testing.T) {
+	fmt.Println(NewRpcError(ErrDisconnect))
+	SetInvokeCB(func(ctx any, in []byte, err error) error {
+		return nil
 	})
 }
