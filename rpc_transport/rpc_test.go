@@ -2,6 +2,7 @@ package rpc_transport
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -192,8 +193,32 @@ func Test_RPCServerStop(t *testing.T) {
 	assert.NoError(t, err)
 
 	cli, err := Dial("node_02", "node_01", host)
+	err = cli.AsyncCall([]byte{1}, context.Background())
+	assert.NoError(t, err)
+
 	time.Sleep(time.Second)
 	cli.Close()
 
+	err = cli.AsyncCall([]byte{}, context.Background())
+	assert.Error(t, err)
+	fmt.Println(err)
+
+	err = cli.AsyncCallC([]byte{}, context.Background(), nil)
+	assert.Error(t, err)
+	fmt.Println(err)
+
+	_, err = cli.Call(context.Background(), nil)
+	assert.Error(t, err)
+	fmt.Println(err)
+
+	err = cli.Shoot(nil)
+	assert.Error(t, err)
+	fmt.Println(err)
+
 	assert.NoError(t, s.Stop())
+}
+
+func Test_AsyncInvoker(t *testing.T) {
+	in := NewAsyncInvoker(nil, nil)
+	fmt.Println(in.Invoke([]byte{}, errors.New("test")))
 }
