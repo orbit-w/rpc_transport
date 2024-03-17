@@ -151,6 +151,7 @@ func Serve(t *testing.T) {
 
 func Test_Misc(t *testing.T) {
 	fmt.Println(NewRpcError(ErrDisconnect))
+	fmt.Println(NewRpcError(nil))
 	SetInvokeCB(func(ctx any, in []byte, err error) error {
 		return nil
 	})

@@ -51,3 +51,13 @@ func TestPending_Pop(t *testing.T) {
 
 	p.OnClose()
 }
+
+func Test_TimerPool(t *testing.T) {
+	fmt.Println(time.Now().String())
+	ti := AcquireTimer(time.Second * 5)
+	select {
+	case <-ti.C:
+		fmt.Println(time.Now().String())
+	}
+	ReleaseTimer(ti)
+}
