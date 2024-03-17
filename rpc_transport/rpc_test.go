@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"io"
 	"log"
 	"runtime/debug"
@@ -21,6 +22,18 @@ var (
 
 	rpcServer RpcServer
 )
+
+func Test_RPCShoot(t *testing.T) {
+	Serve(t)
+
+	cli, err := Dial("node_00", "node_01", local)
+	assert.NoError(t, err)
+	for i := 0; i < 1000; i++ {
+		err = cli.Shoot([]byte{1})
+		assert.NoError(t, err)
+	}
+	time.Sleep(time.Second * 2)
+}
 
 func Test_RPCCall(t *testing.T) {
 	Serve(t)
@@ -55,7 +68,6 @@ func Test_RPCCallWithCancel(t *testing.T) {
 	cancel()
 	fmt.Println("cancel")
 	time.Sleep(time.Second * 2)
-	assert.NoError(t, rpcServer.Stop())
 }
 
 func TestAsyncCall(t *testing.T) {
@@ -142,4 +154,22 @@ func Test_Misc(t *testing.T) {
 	SetInvokeCB(func(ctx any, in []byte, err error) error {
 		return nil
 	})
+
+	Logger().Info("zap Logger info...", zap.String("Level", "INFO"))
+	SugarLogger().Info("zap Logger info...")
+}
+
+func Test_RPCServerStop(t *testing.T) {
+	var (
+		s    RpcServer
+		host = "127.0.0.1:6990"
+	)
+	err := s.Serve(host, nil)
+	assert.NoError(t, err)
+
+	cli, err := Dial("node_02", "node_01", host)
+	time.Sleep(time.Second)
+	cli.Close()
+
+	assert.NoError(t, s.Stop())
 }
