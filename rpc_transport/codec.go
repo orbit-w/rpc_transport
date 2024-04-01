@@ -30,23 +30,23 @@ func NewDecoder() *Decoder {
 	return d
 }
 
-func (d *Decoder) Decode(in packet.IPacket) error {
-	defer in.Return()
+func (d *Decoder) Decode(in []byte) error {
+	reader := packet.Reader(in)
+	defer reader.Return()
+
 	var err error
-	d.seq, err = in.ReadUint32()
+
+	d.seq, err = reader.ReadUint32()
 	if err != nil {
 		return fmt.Errorf("decode seq failed: %s", err.Error())
 	}
-	d.category, err = in.ReadInt8()
+
+	d.category, err = reader.ReadInt8()
 	if err != nil {
 		return fmt.Errorf("decode category failed: %s", err.Error())
 	}
 
-	r := in.Remain()
-	length := len(r)
-	dst := make([]byte, length)
-	copy(dst, r)
-	d.buf = dst
+	d.buf = reader.CopyRemain()
 	return nil
 }
 

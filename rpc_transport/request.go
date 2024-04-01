@@ -34,7 +34,7 @@ type Request struct {
 	session    ISession
 }
 
-func NewRequest(session ISession, in packet.IPacket) (IRequest, error) {
+func NewRequest(session ISession, in []byte) (IRequest, error) {
 	d := NewDecoder()
 	defer d.Return()
 	if err := d.Decode(in); err != nil {

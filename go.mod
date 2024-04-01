@@ -3,7 +3,7 @@ module github.com/orbit-w/rpc_transport
 go 1.20
 
 require (
-	github.com/orbit-w/golib v1.0.11-0.20240317141036-f950ac95435d
+	github.com/orbit-w/golib v1.0.11-0.20240401165114-313e467ed7a9
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.26.0
 )

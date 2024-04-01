@@ -16,7 +16,7 @@ func (c *Client) Call(ctx context.Context, out []byte) ([]byte, error) {
 	c.pending.Push(call)
 	pack := c.codec.encode(seq, RpcCall, out)
 	defer pack.Return()
-	if err := c.conn.Write(pack); err != nil {
+	if err := c.conn.Write(pack.Data()); err != nil {
 		c.pending.Pop(seq)
 		call.Return()
 		return nil, err

@@ -2,7 +2,6 @@ package rpc_transport
 
 import (
 	"errors"
-	"github.com/orbit-w/golib/bases/packet"
 	"github.com/orbit-w/golib/core/transport"
 	"io"
 	"runtime/debug"
@@ -26,7 +25,7 @@ func NewConn(conn transport.IServerConn) {
 func (c *Conn) Send(seq uint32, category int8, out []byte) error {
 	pack := c.Codec.encode(seq, category, out)
 	defer pack.Return()
-	return c.conn.Send(pack)
+	return c.conn.Send(pack.Data())
 }
 
 func (c *Conn) Close() {
@@ -53,7 +52,7 @@ func (c *Conn) reader() {
 	}
 }
 
-func (c *Conn) handleRequest(in packet.IPacket) {
+func (c *Conn) handleRequest(in []byte) {
 	req, err := NewRequest(c, in)
 	if err != nil {
 		SugarLogger().Error("[ServerConn] [reader] new request failed: ", err.Error())
