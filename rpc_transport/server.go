@@ -6,7 +6,7 @@ import (
 )
 
 type RpcServer struct {
-	ts *transport.Server
+	ts transport.IServer
 }
 
 func (s *RpcServer) Serve(host string, rh RequestHandle) error {
@@ -21,8 +21,7 @@ func (s *RpcServer) Serve(host string, rh RequestHandle) error {
 		return err
 	}
 
-	server := new(transport.Server)
-	server.Serve(listener, func(conn transport.IServerConn) error {
+	s.ts = transport.Serve("tcp", listener, func(conn transport.IServerConn) error {
 		//ctx := stream.Context()
 		//md, _ := metadata.FromMetaContext(ctx)
 		//nodeId, _ := md.GetValue("nodeId")
@@ -30,7 +29,6 @@ func (s *RpcServer) Serve(host string, rh RequestHandle) error {
 		NewConn(conn)
 		return nil
 	})
-	s.ts = server
 	return nil
 }
 
