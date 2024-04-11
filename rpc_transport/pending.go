@@ -1,7 +1,7 @@
 package rpc_transport
 
 import (
-	"github.com/orbit-w/golib/core/transport"
+	"github.com/orbit-w/golib/modules/net/transport"
 	"github.com/orbit-w/rpc_transport/timeout"
 	"sync"
 	"time"

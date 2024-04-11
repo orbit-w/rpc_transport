@@ -34,19 +34,17 @@ goos: darwin
 goarch: arm64
 pkg: github.com/orbit-w/rpc_transport/test
 Benchmark_Call
-Benchmark_Call-8                    	   43534	     25965 ns/op
+Benchmark_Call-8                    	   40141	     27878 ns/op
 Benchmark_Call_Concurrency
-Benchmark_Call_Concurrency-8        	  234400	      5031 ns/op
+Benchmark_Call_Concurrency-8        	  233583	      5192 ns/op
 Benchmark_Shoot
-Benchmark_Shoot-8                   	16878447	        71.16 ns/op
+Benchmark_Shoot-8                   	18908940	        67.36 ns/op
 Benchmark_Shoot_Concurrency
-Benchmark_Shoot_Concurrency-8       	 6330224	       198.2 ns/op
+Benchmark_Shoot_Concurrency-8       	 7462492	       160.9 ns/op
 Benchmark_AsyncCall
-Benchmark_AsyncCall-8               	 2294994	       537.7 ns/op
+Benchmark_AsyncCall-8               	 2181933	       528.3 ns/op
 Benchmark_AsyncCall_Concurrency
-Benchmark_AsyncCall_Concurrency-8   	 2186978	       663.1 ns/op
-PASS
-ok  	github.com/orbit-w/rpc_transport/test	11.086s
+Benchmark_AsyncCall_Concurrency-8   	 2064691	       725.3 ns/op
 
 ```
 

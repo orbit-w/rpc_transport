@@ -2,7 +2,7 @@ package rpc_transport
 
 import (
 	"errors"
-	"github.com/orbit-w/golib/core/transport"
+	"github.com/orbit-w/golib/modules/net/transport"
 	"io"
 	"runtime/debug"
 )
@@ -13,10 +13,10 @@ type ISession interface {
 
 type Conn struct {
 	Codec
-	conn transport.IServerConn
+	conn transport.IConn
 }
 
-func NewConn(conn transport.IServerConn) {
+func NewConn(conn transport.IConn) {
 	sConn := Conn{}
 	sConn.conn = conn
 	sConn.reader()

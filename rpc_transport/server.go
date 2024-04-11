@@ -1,8 +1,7 @@
 package rpc_transport
 
 import (
-	"github.com/orbit-w/golib/core/transport"
-	"net"
+	"github.com/orbit-w/golib/modules/net/transport"
 )
 
 type RpcServer struct {
@@ -15,21 +14,15 @@ func (s *RpcServer) Serve(host string, rh RequestHandle) error {
 	} else {
 		gRequestHandle = rh
 	}
-
-	listener, err := net.Listen("tcp", host)
-	if err != nil {
-		return err
-	}
-
-	s.ts = transport.Serve("tcp", listener, func(conn transport.IServerConn) error {
+	var err error
+	s.ts, err = transport.Serve("tcp", host, func(conn transport.IConn) {
 		//ctx := stream.Context()
 		//md, _ := metadata.FromMetaContext(ctx)
 		//nodeId, _ := md.GetValue("nodeId")
 		//log.Println("Connection established successfully, client nodeId: ", nodeId)
 		NewConn(conn)
-		return nil
 	})
-	return nil
+	return err
 }
 
 func (s *RpcServer) Stop() error {

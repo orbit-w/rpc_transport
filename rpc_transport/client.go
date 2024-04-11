@@ -3,7 +3,7 @@ package rpc_transport
 import (
 	"context"
 	"errors"
-	"github.com/orbit-w/golib/core/transport"
+	"github.com/orbit-w/golib/modules/net/transport"
 	"github.com/orbit-w/golib/modules/unbounded"
 	"io"
 	"runtime/debug"
@@ -106,7 +106,7 @@ func (c *Client) Shoot(out []byte) error {
 	}
 	pack := c.codec.encode(0, RpcRaw, out)
 	defer pack.Return()
-	return c.conn.Write(pack.Data())
+	return c.conn.SendPack(pack)
 }
 
 func (c *Client) reader() {

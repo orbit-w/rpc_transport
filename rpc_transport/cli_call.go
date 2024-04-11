@@ -3,7 +3,7 @@ package rpc_transport
 import (
 	"context"
 	"errors"
-	"github.com/orbit-w/golib/core/transport"
+	"github.com/orbit-w/golib/modules/net/transport"
 )
 
 func (c *Client) Call(ctx context.Context, out []byte) ([]byte, error) {
@@ -16,7 +16,7 @@ func (c *Client) Call(ctx context.Context, out []byte) ([]byte, error) {
 	c.pending.Push(call)
 	pack := c.codec.encode(seq, RpcCall, out)
 	defer pack.Return()
-	if err := c.conn.Write(pack.Data()); err != nil {
+	if err := c.conn.SendPack(pack); err != nil {
 		c.pending.Pop(seq)
 		call.Return()
 		return nil, err

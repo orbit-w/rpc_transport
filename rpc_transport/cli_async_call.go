@@ -21,7 +21,7 @@ func (c *Client) AsyncCall(out []byte, ctx any) error {
 	c.pending.Push(req)
 	pack := c.codec.encode(seq, RpcAsyncCall, out)
 	defer pack.Return()
-	if err := c.conn.Write(pack.Data()); err != nil {
+	if err := c.conn.SendPack(pack); err != nil {
 		c.pending.Pop(seq)
 		req.Return()
 		return err
@@ -38,7 +38,7 @@ func (c *Client) AsyncCallC(out []byte, ctx any, cb func(ctx any, in []byte, err
 	c.pending.Push(req)
 	pack := c.codec.encode(seq, RpcAsyncCall, out)
 	defer pack.Return()
-	if err := c.conn.Write(pack.Data()); err != nil {
+	if err := c.conn.SendPack(pack); err != nil {
 		c.pending.Pop(seq)
 		req.Return()
 		return err
