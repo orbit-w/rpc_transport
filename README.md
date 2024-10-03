@@ -19,9 +19,13 @@ RPC_Transport 可以为 RPC(Remote procedure call) 提供高效可靠底层远�
 RPC_Transport 在面对高并发的情况下，性能也很优秀，底层避免多数无用的锁碰撞
 
 支持 Shoot, Call, AsyncCall 三种消息通信模式
-**Shoot**：单向远程投递消息，不关心回复
-**Call**：单向远程投递消息，同阻塞式等待接收者的回复
-**AsyncCall**: 单向远程投递消息，异步等待接收者的回复；当收到回复，系统会自动通知发送者调用回调函数
+
+***Shoot***：单向远程投递消息，不关心回复
+
+***Call***：单向远程投递消息，同阻塞式等待接收者的回复
+
+***AsyncCall***: 单向远程投递消息，异步等待接收者的回复；当收到回复，系统会自动通知发送者调用回调函数
+#
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/orbit-w/rpc_transport/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/orbit-w/rpc_transport/tree/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/orbit-w/mmrpc)](https://goreportcard.com/report/github.com/orbit-w/mmrpc)
