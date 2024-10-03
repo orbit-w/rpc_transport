@@ -29,23 +29,24 @@ RPC_Transport 在面对高并发的情况下，性能也很优秀，底层避免
 
 ## Benchmark
 ```
-➜  test git:(master) go test -v -run=^$ -bench .
+go test ./benchmark/... -v -run=^-benchmem -bench=.
 goos: darwin
 goarch: arm64
-pkg: github.com/orbit-w/rpc_transport/test
+pkg: github.com/orbit-w/rpc_transport/benchmark
 Benchmark_Call
-Benchmark_Call-8                    	   40141	     27878 ns/op
+Benchmark_Call-8                    	   42486	     26653 ns/op
 Benchmark_Call_Concurrency
-Benchmark_Call_Concurrency-8        	  233583	      5192 ns/op
+Benchmark_Call_Concurrency-8        	  232701	      5103 ns/op
 Benchmark_Shoot
-Benchmark_Shoot-8                   	18908940	        67.36 ns/op
+Benchmark_Shoot-8                   	21751640	        55.48 ns/op
 Benchmark_Shoot_Concurrency
-Benchmark_Shoot_Concurrency-8       	 7462492	       160.9 ns/op
+Benchmark_Shoot_Concurrency-8       	10518703	       142.2 ns/op
 Benchmark_AsyncCall
-Benchmark_AsyncCall-8               	 2181933	       528.3 ns/op
+Benchmark_AsyncCall-8               	 2416693	       498.5 ns/op
 Benchmark_AsyncCall_Concurrency
-Benchmark_AsyncCall_Concurrency-8   	 2064691	       725.3 ns/op
-
+Benchmark_AsyncCall_Concurrency-8   	 2789655	       626.1 ns/op
+PASS
+ok  	github.com/orbit-w/rpc_transport/benchmark	11.343s
 ```
 
 ## Client
