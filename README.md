@@ -18,7 +18,7 @@ RPC_Transport 可以为 RPC(Remote procedure call) 提供高效可靠底层远�
 底层通信协议支持TCP,依赖TCP底层连接来提供可靠性和排序.
 RPC_Transport 在面对高并发的情况下，性能也很优秀，底层避免多数无用的锁碰撞
 
-支持 Shoot, Call, AsyncCall 三种消息通信模式
+支持 ***Shoot***, ***Call***, ***AsyncCall*** 三种消息通信模式
 
 ***Shoot***：单向远程投递消息，不关心回复
 
