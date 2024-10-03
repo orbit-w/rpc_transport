@@ -21,4 +21,4 @@
 go.work
 
 .idea
-./rpc_transport/logs
+rpc_transport/logs
