@@ -94,7 +94,6 @@ func Dial(id, remoteId, addr string, ops ...*DialOption) (IClient, error) {
 	}
 	go cli.loopInput()
 	go cli.reader()
-	//SugarLogger().Infof("Client dial remote %s successfully", addr)
 	return cli, nil
 }
 

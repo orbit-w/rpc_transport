@@ -49,7 +49,7 @@ func NewRequest(session ISession, in []byte) (IRequest, error) {
 }
 
 func (r *Request) NewReader() packet.IPacket {
-	return packet.Reader(r.buf)
+	return packet.ReaderP(r.buf)
 }
 
 func (r *Request) Data() []byte {

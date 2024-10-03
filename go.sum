@@ -14,8 +14,8 @@ github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0V
 github.com/magiconair/properties v1.8.7/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
 github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
-github.com/orbit-w/meteor v0.0.0-20241002094721-114c550672bf h1:eh5eKuMJY8WeTmL6R8YXik1sx9UeiguRBydcfu/t22I=
-github.com/orbit-w/meteor v0.0.0-20241002094721-114c550672bf/go.mod h1:OY857pgnw6xBwFZ9WUWmZdcLOZ6+CFt5nLUJcoIZwJU=
+github.com/orbit-w/meteor v0.0.0-20241003114358-ed826bc4e055 h1:xgeOjlwURiS8GKoqFdM4BmmOxbZwrI7W3yXgtJUBsiQ=
+github.com/orbit-w/meteor v0.0.0-20241003114358-ed826bc4e055/go.mod h1:OY857pgnw6xBwFZ9WUWmZdcLOZ6+CFt5nLUJcoIZwJU=
 github.com/pelletier/go-toml/v2 v2.2.2 h1:aYUidT7k73Pcl9nb2gScu7NSrKCSHIDE89b3+6Wq+LM=
 github.com/pelletier/go-toml/v2 v2.2.2/go.mod h1:1t835xjRzz80PqgE6HHgN2JOsmgYu/h4qDAS4n929Rs=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

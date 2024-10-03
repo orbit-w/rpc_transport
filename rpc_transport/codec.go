@@ -1,7 +1,8 @@
 package rpc_transport
 
 import (
-	"fmt"
+	"encoding/binary"
+	"errors"
 	"github.com/orbit-w/meteor/modules/net/packet"
 )
 
@@ -31,22 +32,15 @@ func NewDecoder() *Decoder {
 }
 
 func (d *Decoder) Decode(in []byte) error {
-	reader := packet.ReaderP(in)
-	defer packet.Return(reader)
-
-	var err error
-
-	d.seq, err = reader.ReadUint32()
-	if err != nil {
-		return fmt.Errorf("decode seq failed: %s", err.Error())
+	if len(in) < (4 + 1) {
+		return errors.New("decode failed")
 	}
-
-	d.category, err = reader.ReadInt8()
-	if err != nil {
-		return fmt.Errorf("decode category failed: %s", err.Error())
-	}
-
-	d.buf = reader.CopyRemain()
+	var off int
+	d.seq = binary.BigEndian.Uint32(in[off : off+4])
+	off += 4
+	d.category = int8(in[off])
+	off += 1
+	d.buf = in[off:]
 	return nil
 }
 
