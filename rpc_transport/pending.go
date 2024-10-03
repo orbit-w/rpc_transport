@@ -1,7 +1,7 @@
 package rpc_transport
 
 import (
-	"github.com/orbit-w/golib/modules/net/transport"
+	"github.com/orbit-w/meteor/modules/net/transport"
 	"github.com/orbit-w/rpc_transport/timeout"
 	"sync"
 	"time"
@@ -32,7 +32,7 @@ func (p *Pending) Init(cli *Client, _timeout time.Duration) {
 			ids: ids,
 		}); err != nil {
 			if !transport.IsCancelError(err) {
-				Logger().Error("[Pending] [Init] handle send timeoutListMsg failed")
+				cli.log.Error("[Pending] [Init] handle send timeoutListMsg failed")
 			}
 		}
 	})

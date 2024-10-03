@@ -1,10 +1,14 @@
 package rpc_transport
 
 import (
+	"context"
 	"errors"
-	"github.com/orbit-w/golib/modules/net/transport"
+	"github.com/orbit-w/meteor/bases/misc/utils"
+	"github.com/orbit-w/meteor/modules/mlog"
+	"github.com/orbit-w/meteor/modules/net/packet"
+	"github.com/orbit-w/meteor/modules/net/transport"
+	"go.uber.org/zap"
 	"io"
-	"runtime/debug"
 )
 
 type ISession interface {
@@ -14,17 +18,24 @@ type ISession interface {
 type Conn struct {
 	Codec
 	conn transport.IConn
+	log  *mlog.ZapLogger
 }
 
 func NewConn(conn transport.IConn) {
-	sConn := Conn{}
-	sConn.conn = conn
+	sConn := newConn(conn)
 	sConn.reader()
 }
 
+func newConn(conn transport.IConn) *Conn {
+	return &Conn{
+		conn: conn,
+		log:  mlog.NewLogger("[RpcTransport] conn: "),
+	}
+}
+
 func (c *Conn) Send(seq uint32, category int8, out []byte) error {
-	pack := c.Codec.encode(seq, category, out)
-	defer pack.Return()
+	pack := c.Codec.Encode(seq, category, out)
+	defer packet.Return(pack)
 	return c.conn.Send(pack.Data())
 }
 
@@ -36,14 +47,17 @@ func (c *Conn) reader() {
 	defer func() {
 		_ = c.conn.Close()
 	}()
+
+	ctx := context.Background()
+
 	for {
-		in, err := c.conn.Recv()
+		in, err := c.conn.Recv(ctx)
 		if err != nil {
 			switch {
 			case transport.IsCancelError(err):
 			case errors.Is(err, io.EOF):
 			default:
-				SugarLogger().Error("conn read failed: ", err.Error())
+				c.log.Error("conn read failed", zap.Error(err))
 			}
 			return
 		}
@@ -55,15 +69,11 @@ func (c *Conn) reader() {
 func (c *Conn) handleRequest(in []byte) {
 	req, err := NewRequest(c, in)
 	if err != nil {
-		SugarLogger().Error("[ServerConn] [reader] new request failed: ", err.Error())
+		c.log.Error("[reader] new request failed", zap.Error(err))
 		return
 	}
-	defer func() {
-		if r := recover(); r != nil {
-			SugarLogger().Error(r)
-			SugarLogger().Error("stack: ", string(debug.Stack()))
-		}
-	}()
+
+	defer utils.RecoverPanic()
 
 	switch req.Category() {
 	case RpcRaw:

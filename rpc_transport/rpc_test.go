@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 	"io"
 	"log"
 	"runtime/debug"
@@ -179,9 +178,6 @@ func Test_Misc(t *testing.T) {
 	SetInvokeCB(func(ctx any, in []byte, err error) error {
 		return nil
 	})
-
-	Logger().Info("zap Logger info...", zap.String("Level", "INFO"))
-	SugarLogger().Info("zap Logger info...")
 }
 
 func Test_RPCServerStop(t *testing.T) {

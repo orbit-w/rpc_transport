@@ -1,7 +1,7 @@
 package rpc_transport
 
 import (
-	"github.com/orbit-w/golib/bases/packet"
+	"github.com/orbit-w/meteor/modules/net/packet"
 )
 
 /*

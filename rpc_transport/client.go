@@ -3,8 +3,12 @@ package rpc_transport
 import (
 	"context"
 	"errors"
-	"github.com/orbit-w/golib/modules/net/transport"
-	"github.com/orbit-w/golib/modules/unbounded"
+	"fmt"
+	"github.com/orbit-w/meteor/modules/mlog"
+	"github.com/orbit-w/meteor/modules/net/packet"
+	"github.com/orbit-w/meteor/modules/net/transport"
+	"github.com/orbit-w/meteor/modules/unbounded"
+	"go.uber.org/zap"
 	"io"
 	"runtime/debug"
 	"sync/atomic"
@@ -64,10 +68,11 @@ type Client struct {
 	codec      Codec
 	pending    *Pending
 	ch         unbounded.IUnbounded[any]
+	log        *mlog.ZapLogger
 }
 
 type DialOption struct {
-	DisconnectHandler func(nodeId string)
+	DisconnectHandler func()
 }
 
 func Dial(id, remoteId, addr string, ops ...*DialOption) (IClient, error) {
@@ -78,6 +83,7 @@ func Dial(id, remoteId, addr string, ops ...*DialOption) (IClient, error) {
 		timeout:    RpcTimeout,
 		pending:    new(Pending),
 		ch:         unbounded.New[any](2048),
+		log:        mlog.NewLogger("[RpcTransport] client: "),
 	}
 
 	cli.conn = transport.DialWithOps(cli.remoteAddr, cli.parseOpToTransportOp(ops...))
@@ -104,15 +110,16 @@ func (c *Client) Shoot(out []byte) error {
 	if c.state.Load() == TypeStopped {
 		return ErrDisconnect
 	}
-	pack := c.codec.encode(0, RpcRaw, out)
-	defer pack.Return()
-	return c.conn.SendPack(pack)
+	pack := c.codec.Encode(0, RpcRaw, out)
+	defer packet.Return(pack)
+	return c.conn.Send(pack.Data())
 }
 
 func (c *Client) reader() {
 	var (
 		in  []byte
 		err error
+		ctx = context.Background()
 	)
 
 	defer func() {
@@ -121,7 +128,7 @@ func (c *Client) reader() {
 			case transport.IsCancelError(err):
 			case errors.Is(err, io.EOF):
 			default:
-				SugarLogger().Errorf("read failed: %s", err.Error())
+				c.log.Error("read failed", zap.Error(err))
 			}
 		}
 
@@ -136,7 +143,7 @@ func (c *Client) reader() {
 	}()
 
 	for {
-		in, err = c.conn.Recv()
+		in, err = c.conn.Recv(ctx)
 		if err != nil {
 			return
 		}
@@ -145,7 +152,7 @@ func (c *Client) reader() {
 
 		if err = c.ch.Send(decoder); err != nil {
 			if !transport.IsCancelError(err) {
-				Logger().Error("[Client] [reader] [zq.Write] send in failed")
+				c.log.Error("[zq.Write] send in failed", zap.Error(err))
 			}
 		}
 	}
@@ -171,7 +178,7 @@ func (c *Client) loopInput() {
 			}
 		})
 		c.pending.OnClose()
-		Logger().Info("[Client] disconnect...")
+		c.log.Info("disconnect...")
 	}()
 
 	c.ch.Receive(func(msg any) bool {
@@ -183,8 +190,9 @@ func (c *Client) loopInput() {
 func (c *Client) handleMessage(in any) {
 	defer func() {
 		if r := recover(); r != nil {
-			SugarLogger().Error(r.(string))
-			SugarLogger().Errorf("stack: %s", string(debug.Stack()))
+			fmt.Println("Recovered from panic:", r)
+			fmt.Println("Stack trace:")
+			debug.PrintStack()
 		}
 	}()
 
@@ -214,14 +222,12 @@ func (c *Client) handleMessage(in any) {
 }
 
 func (c *Client) parseOpToTransportOp(ops ...*DialOption) *transport.DialOption {
-	var dh func(nodeId string)
+	var dh func()
 	if len(ops) > 0 {
 		op := ops[0]
 		dh = op.DisconnectHandler
 	}
 	return &transport.DialOption{
-		CurrentNodeId:     c.id,
-		RemoteNodeId:      c.remoteId,
 		DisconnectHandler: dh,
 	}
 }

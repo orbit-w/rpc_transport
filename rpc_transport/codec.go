@@ -2,14 +2,14 @@ package rpc_transport
 
 import (
 	"fmt"
-	"github.com/orbit-w/golib/bases/packet"
+	"github.com/orbit-w/meteor/modules/net/packet"
 )
 
 type Codec struct {
 }
 
-func (c Codec) encode(seq uint32, category int8, out []byte) packet.IPacket {
-	writer := packet.Writer()
+func (c Codec) Encode(seq uint32, category int8, out []byte) packet.IPacket {
+	writer := packet.WriterP(4 + 1 + len(out))
 	writer.WriteUint32(seq)
 	writer.WriteInt8(category)
 	if len(out) != 0 {
@@ -31,8 +31,8 @@ func NewDecoder() *Decoder {
 }
 
 func (d *Decoder) Decode(in []byte) error {
-	reader := packet.Reader(in)
-	defer reader.Return()
+	reader := packet.ReaderP(in)
+	defer packet.Return(reader)
 
 	var err error
 

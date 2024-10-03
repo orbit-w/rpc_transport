@@ -1,5 +1,7 @@
 package rpc_transport
 
+import "github.com/orbit-w/meteor/modules/net/packet"
+
 var (
 	invokeCB       func(ctx any, in []byte, err error) error
 	defineInvokeCB = func(ctx any, in []byte, err error) error {
@@ -19,9 +21,9 @@ func (c *Client) AsyncCall(out []byte, ctx any) error {
 	seq := c.seq.Add(1)
 	req := NewCallWithInvoker(seq, NewAsyncInvoker(ctx, nil))
 	c.pending.Push(req)
-	pack := c.codec.encode(seq, RpcAsyncCall, out)
-	defer pack.Return()
-	if err := c.conn.SendPack(pack); err != nil {
+	pack := c.codec.Encode(seq, RpcAsyncCall, out)
+	defer packet.Return(pack)
+	if err := c.conn.Send(pack.Data()); err != nil {
 		c.pending.Pop(seq)
 		req.Return()
 		return err
@@ -36,9 +38,9 @@ func (c *Client) AsyncCallC(out []byte, ctx any, cb func(ctx any, in []byte, err
 	seq := c.seq.Add(1)
 	req := NewCallWithInvoker(seq, NewAsyncInvoker(ctx, cb))
 	c.pending.Push(req)
-	pack := c.codec.encode(seq, RpcAsyncCall, out)
-	defer pack.Return()
-	if err := c.conn.SendPack(pack); err != nil {
+	pack := c.codec.Encode(seq, RpcAsyncCall, out)
+	defer packet.Return(pack)
+	if err := c.conn.Send(pack.Data()); err != nil {
 		c.pending.Pop(seq)
 		req.Return()
 		return err

@@ -1,7 +1,7 @@
 package rpc_transport
 
 import (
-	"github.com/orbit-w/golib/modules/net/transport"
+	"github.com/orbit-w/meteor/modules/net/transport"
 )
 
 type RpcServer struct {
